@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  hdfs-namenode:
+    image: matnar/hadoop
+    command: hdfs namenode -format && /usr/local/hadoop/sbin/start-dfs.sh
+    ports:
+      - "9870:9870"
+      - "54310:54310"
+    networks:
+      - sabd_network
+    tty: true
+    depends_on: 
+      - hdfs-datanode
+    
+  hdfs-datanode:
+    image: matnar/hadoop
+    networks:
+      - sabd_network
+    tty: true
+
+  spark-master:
+    image: bitnami/spark
+    environment:
+      - SPARK_MODE=master
+    networks:
+      - sabd_network
+    hostname: spark-master
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+    tty: true
+
+  spark-worker:
+    image: bitnami/spark
+    networks:
+      - sabd_network
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+    tty: true
+    depends_on:
+      - spark-master
+
+  redis :
+    image: redis
+    networks:
+      - sabd_network
+    ports:
+      - "6379:6379"
+    tty : true
+
+
+networks:
+  sabd_network:
+    driver: bridge
+    name: sabd_network
