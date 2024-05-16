@@ -1,22 +1,27 @@
 version: '3'
 
 services:
-  hdfs-namenode:
-    image: matnar/hadoop
-    command: hdfs namenode -format && /usr/local/hadoop/sbin/start-dfs.sh
+  hdfs-master:
+    image: matnar/hadoop   
+    container_name: master
     ports:
       - "9870:9870"
       - "54310:54310"
     networks:
-      - sabd_network
+      - project1-network
     tty: true
+    volumes:
+    - ./scripts/hadoop-hdfs:/hdfs-scripts
     depends_on: 
-      - hdfs-datanode
+      - hdfs-datanode1
     
-  hdfs-datanode:
+  hdfs-datanode1:
     image: matnar/hadoop
+    container_name: slave1
+    ports:
+      - "9864:9864"
     networks:
-      - sabd_network
+      - project1-network
     tty: true
 
   spark-master:
@@ -24,7 +29,7 @@ services:
     environment:
       - SPARK_MODE=master
     networks:
-      - sabd_network
+      - project1-network
     hostname: spark-master
     ports:
       - '8080:8080'
@@ -34,7 +39,7 @@ services:
   spark-worker:
     image: bitnami/spark
     networks:
-      - sabd_network
+      - project1-network
     environment:
       - SPARK_MODE=worker
       - SPARK_WORKER_MEMORY=1G
@@ -43,16 +48,15 @@ services:
     depends_on:
       - spark-master
 
-  redis :
+  redis:
     image: redis
     networks:
-      - sabd_network
+      - project1-network
     ports:
       - "6379:6379"
-    tty : true
-
+    tty: true
 
 networks:
-  sabd_network:
+  project1-network:
     driver: bridge
-    name: sabd_network
+    name: project1-network

@@ -13,7 +13,7 @@ COPY requirements.txt .
 # Install virtualenv and create a virtual environment
 RUN pip install virtualenv && \
     virtualenv venv && \
-    . venv/bin/activate && \
+    .venv/bin/activate && \
     pip install -r requirements.txt
 
 # Copy the remaining files to the working directory
