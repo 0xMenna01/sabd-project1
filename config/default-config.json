@@ -1,0 +1,11 @@
+{
+    "hdfs": {
+        "host": "master",
+        "port": 54310
+    },
+    "spark": {
+        "master": "spark-master",
+        "appName": "SparkAnalysisProject1",
+        "port": 7077
+    }
+}
