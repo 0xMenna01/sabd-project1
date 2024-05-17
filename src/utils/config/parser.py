@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Optional, TypedDict
+from typing import TypedDict
 import pandas as pd
-from . import logger
 
 
 DEFAULT_CONFIG_PATH = os.getenv(
@@ -22,12 +21,18 @@ class SparkConfig(TypedDict):
     port: int
 
 
+class B2Config(TypedDict):
+    bucketName: str
+    fileName: str
+
+
 class Config:
     """Configuration of the application."""
 
-    def __init__(self, hdfs: HdfsConfig, spark: SparkConfig) -> None:
+    def __init__(self, hdfs: HdfsConfig, spark: SparkConfig, b2: B2Config) -> None:
         self._hdfs = hdfs
         self._spark = spark
+        self._b2 = b2
 
     @staticmethod
     def from_default_config() -> Config:
@@ -35,7 +40,7 @@ class Config:
         with open(DEFAULT_CONFIG_PATH, 'r') as file:
             config_data = json.load(file)
 
-        return Config(hdfs=config_data['hdfs'], spark=config_data['spark'])
+        return Config(hdfs=config_data['hdfs'], spark=config_data['spark'], b2=config_data['b2'])
 
     @property
     def hdfs_host(self) -> str:
@@ -57,14 +62,10 @@ class Config:
     def spark_port(self) -> int:
         return self._spark['port']
 
+    @property
+    def b2_bucket_name(self) -> str:
+        return self._b2['bucketName']
 
-class ConfigFactory:
-    _config_instance: Optional[Config] = None
-
-    @staticmethod
-    def config() -> Config:
-        if ConfigFactory._config_instance is None:
-            ConfigFactory._config_instance = Config.from_default_config()
-            logger.config_loaded(
-                ConfigFactory._config_instance._hdfs, ConfigFactory._config_instance._spark)
-        return ConfigFactory._config_instance
+    @property
+    def b2_file_name(self) -> str:
+        return self._b2['fileName']

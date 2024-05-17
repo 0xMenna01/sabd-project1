@@ -1,3 +1,4 @@
+from api.b2.api import B2ApiForDataset
 
 
 def main() -> int:

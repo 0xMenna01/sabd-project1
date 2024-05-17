@@ -7,5 +7,9 @@
         "master": "spark-master",
         "appName": "SparkAnalysisProject1",
         "port": 7077
+    },
+    "b2": {
+        "bucketName": "dataset-project1",
+        "fileName": "raw_data_medium-utv_sorted.bin"
     }
 }
