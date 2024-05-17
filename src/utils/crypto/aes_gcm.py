@@ -40,6 +40,5 @@ def csv_to_bytes(df: pd.DataFrame) -> bytes:
     return df.to_csv(index=False).encode('utf-8')
 
 
-def bytes_to_dataframe(data: bytes) -> pd.DataFrame:
-    csv = data.decode('utf-8')
-    return pd.read_csv(io.StringIO(csv))
+def bytes_to_str(data: bytes) -> str:
+    return data.decode('utf-8')

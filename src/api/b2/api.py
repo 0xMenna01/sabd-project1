@@ -4,7 +4,7 @@ import io
 import os
 from utils.config.factory import ConfigFactory
 from utils.files import create_dir, load_bytes_from
-from utils.crypto.aes_gcm import AES256GCM, bytes_to_dataframe
+from utils.crypto.aes_gcm import AES256GCM, bytes_to_str
 from utils.logging.factory import LoggerFactory
 from b2sdk.v2 import B2Api
 from b2sdk.v2 import InMemoryAccountInfo
@@ -66,7 +66,7 @@ class B2ApiForDataset:
     def api(self) -> B2Api:
         return self._api
 
-    def dataset_as_dataframe(self):
+    def dataset_as_dataframe(self) -> str:
         logger = LoggerFactory.b2_logger()
         config = ConfigFactory.config()
 
@@ -89,4 +89,4 @@ class B2ApiForDataset:
 
         # Close the buffer
         rcv_buf.close()
-        return bytes_to_dataframe(plaintext)
+        return bytes_to_str(plaintext)
