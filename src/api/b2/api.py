@@ -66,7 +66,7 @@ class B2ApiForDataset:
     def api(self) -> B2Api:
         return self._api
 
-    def dataset_as_dataframe(self) -> str:
+    def get_dataset(self) -> str:
         logger = LoggerFactory.b2_logger()
         config = ConfigFactory.config()
 
