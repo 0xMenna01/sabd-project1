@@ -1,5 +1,7 @@
 FROM apache/nifi:latest
 
+ENV HADOOP_HOME=/opt/nifi/nifi-current/conf/hadoop
+
 # only if you have custom processors
 #COPY template/my_nar.nar /opt/nifi/nifi-current/lib/
 #COPY template/testflow1.xml /opt/nifi/nifi-current/conf/templates
