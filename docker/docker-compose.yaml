@@ -11,6 +11,7 @@ services:
       - SINGLE_USER_CREDENTIALS_PASSWORD=passwordsegreta
       - NIFI_SENSITIVE_PROPS_KEY=passwordsegreta
       - NIFI_HOME=/opt/nifi/nifi-current
+      - HADOOP_HOME=/conf/hadoop- HADOOP_HOME=/conf/hadoop
   
   hdfs-master:
     image: matnar/hadoop   
