@@ -1,6 +1,17 @@
 version: '3'
 
 services:
+  nifi:
+    container_name: nifi-ingestion
+    build: ./nifi/nifi-ingestion/
+    ports:
+      - '8443:8443'
+    environment:
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=passwordsegreta
+      - NIFI_SENSITIVE_PROPS_KEY=passwordsegreta
+      - NIFI_HOME=/opt/nifi/nifi-current
+  
   hdfs-master:
     image: matnar/hadoop   
     container_name: master
