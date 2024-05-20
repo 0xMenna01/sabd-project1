@@ -1,0 +1,10 @@
+{
+    "deployment": "development",
+    "datasetPath": "$NIFI_INGESTION_HOME/dataset/raw_data_medium-utv_sorted.bin",
+    "b2": {
+        "aesKey": "",
+        "authKey": "",
+        "bucketName": "",
+        "filename": ""
+    }
+}

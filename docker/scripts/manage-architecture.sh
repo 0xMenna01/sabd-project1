@@ -7,6 +7,7 @@ HDFS_DOCKER_IMAGE=matnar/hadoop
 HDFS_MASTER_CONTAINER=hdfs-master
 DOCKER_NETWORK=project1-network
 
+
 usage() {
     echo "Usage (only one flag):"
     echo "       ./manage-architecture.sh --start: 

@@ -6,11 +6,16 @@ services:
     build: ./nifi/nifi-ingestion/
     ports:
       - '8443:8443'
+    networks:
+      - project1-network
+    tty: true
     environment:
       - SINGLE_USER_CREDENTIALS_USERNAME=admin
       - SINGLE_USER_CREDENTIALS_PASSWORD=passwordsegreta
       - NIFI_SENSITIVE_PROPS_KEY=passwordsegreta
       - NIFI_HOME=/opt/nifi/nifi-current
+    depends_on: 
+      - hdfs-master
   
   hdfs-master:
     image: matnar/hadoop   
