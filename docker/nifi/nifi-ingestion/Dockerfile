@@ -1,16 +1,16 @@
 FROM apache/nifi:latest
 
-ENV HADOOP_HOME=/opt/nifi/nifi-current/conf/hadoop
+# Create hadoop and ingestion conf directories
+RUN mkdir $NIFI_HOME/conf/hadoop
+RUN mkdir $NIFI_HOME/conf/nifi-ingestion
 
-# only if you have custom processors
-#COPY template/my_nar.nar /opt/nifi/nifi-current/lib/
-#COPY template/testflow1.xml /opt/nifi/nifi-current/conf/templates
+# Copy hadoop configuration files
+COPY --chown=nifi:nifi conf/hadoop/core-site.xml  $NIFI_HOME/conf/hadoop//hdfs-site.xml
+COPY --chown=nifi:nifi conf/hadoop/hdfs-site.xml  $NIFI_HOME/conf/hadoop/core-site.xml
 
-COPY hadoop/core-site.xml  $HADOOP_HOME/hdfs-site.xml
-COPY hadoop/hdfs-site.xml  $HADOOP_HOME/core-site.xml
 
-COPY --chown=nifi:nifi template/my-flow.xml.gz /opt/nifi/nifi-current/conf/flow.xml.gz
+# Copy the flow configuration files
+COPY --chown=nifi:nifi conf/flow.xml.gz $NIFI_HOME/conf/flow.xml.gz
+COPY --chown=nifi:nifi conf/flow.json.gz $NIFI_HOME/conf/flow.json.gz
 
 EXPOSE 8443
-
-CMD ["sh", "-c", "$NIFI_HOME/bin/nifi.sh start"]
