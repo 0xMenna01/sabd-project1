@@ -11,8 +11,8 @@ services:
     tty: true
     environment:
       - SINGLE_USER_CREDENTIALS_USERNAME=admin
-      - SINGLE_USER_CREDENTIALS_PASSWORD=passwordsegreta
-      - NIFI_SENSITIVE_PROPS_KEY=passwordsegreta
+      - SINGLE_USER_CREDENTIALS_PASSWORD=${SINGLE_USER_CREDENTIALS_PASSWORD}
+      - NIFI_SENSITIVE_PROPS_KEY=${NIFI_SENSITIVE_PROPS_KEY}
       - NIFI_HOME=/opt/nifi/nifi-current
     volumes:
       - ./scripts/nifi:/opt/nifi/nifi-current/conf/nifi-ingestion/scripts

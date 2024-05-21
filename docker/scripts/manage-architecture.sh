@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Variables
-PATH_HDFS_START_SCRIPT=/hdfs-scripts/start-dfs.sh
-PATH_NIFI_START_SCRIPT=/opt/nifi/nifi-current/conf/nifi-ingestion/scripts
+PATH_HDFS_SCRIPTS=/hdfs-scripts
+PATH_NIFI_SCRIPTS=/opt/nifi/nifi-current/conf/nifi-ingestion/scripts
 HADOOP_HOME=/usr/local/hadoop
 HDFS_DOCKER_IMAGE=matnar/hadoop
 HDFS_MASTER_CONTAINER=hdfs-master
@@ -14,9 +14,9 @@ usage() {
     echo "Usage (only one flag):"
     echo "       ./manage-architecture.sh --start: 
                    Starts the whole architecture"
-    echo "       ./manage-architecture.sh --spark-worker <number_of_workers>:
+    echo "       ./manage-architecture.sh start --spark-worker <number_of_workers>:
                    Starts the whole architecture with the specified number of spark workers"
-    echo "       ./manage-architecture.sh -restart-dfs: 
+    echo "       ./manage-architecture.sh --restart-dfs: 
                    Restarts the HDFS"
     echo "       ./manage-architecture.sh --hdfs-scale-out -p <port1:port2>:
                    Scales out the HDFS with a new datanode"
@@ -35,11 +35,12 @@ run_docker_compose() {
 }
 
 init_hdfs() {
-    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_START_SCRIPT --format
+    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh --format
+    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/init-dataset-directory.sh
 }
 
 restart_dfs() {
-    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_START_SCRIPT
+    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh
 }
 
 hdfs_scale_out() {
@@ -58,8 +59,8 @@ hdfs_scale_out() {
     restart_dfs
 }
 
-start-nifi() {
-    docker-compose exec $NIFI_CONTAINER $PATH_NIFI_START_SCRIPT $1
+config-nifi() {
+    docker-compose exec $NIFI_CONTAINER $PATH_NIFI_SCRIPTS/set-config.sh $1
 }
 
 
@@ -70,11 +71,11 @@ execute() {
     elif [ "$1" = "--start" ]; then
         run_docker_compose 1
         init_hdfs
-        start-nifi --local
+        config-nifi --local
     elif [ "$1" = "--spark-worker" ]; then
         run_docker_compose $2
         init_hdfs
-        start-nifi --local
+        config-nifi --local
     elif [ "$1" = "--restart-dfs" ]; then
         restart_dfs
     elif [ "$1" = "--hdfs-scale-out" ]; then
@@ -82,9 +83,9 @@ execute() {
     elif [ "$1" = "--scale-spark-worker" ]; then
         run_docker_compose $2
     elif [ "$1" = "--nifi-remote" ]; then
-        start-nifi --remote
+        config-nifi --remote
     elif [ "$1" = "--nifi-local" ]; then
-        start-nifi --local
+        config-nifi --local
     else
         usage
     fi
