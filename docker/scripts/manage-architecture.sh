@@ -2,10 +2,13 @@
 
 # Variables
 PATH_HDFS_START_SCRIPT=/hdfs-scripts/start-dfs.sh
+PATH_NIFI_START_SCRIPT=/opt/nifi/nifi-current/conf/nifi-ingestion/scripts
 HADOOP_HOME=/usr/local/hadoop
 HDFS_DOCKER_IMAGE=matnar/hadoop
 HDFS_MASTER_CONTAINER=hdfs-master
+NIFI_CONTAINER=nifi
 DOCKER_NETWORK=project1-network
+
 
 usage() {
     echo "Usage (only one flag):"
@@ -19,6 +22,10 @@ usage() {
                    Scales out the HDFS with a new datanode"
     echo "       ./manage-architecture.sh --scale-spark-worker <number_of_workers>:
                    Scalesthe Spark workers with the specified number of workers"
+    echo "       ./manage-architecture.sh --nifi-remote: 
+                   Sets Nifi to acquire the dataset remotely"
+    echo "       ./manage-architecture.sh --nifi-local:
+                     Sets Nifi to acquire the dataset locally"
 }
 
 
@@ -51,26 +58,36 @@ hdfs_scale_out() {
     restart_dfs
 }
 
+start-nifi() {
+    docker-compose exec $NIFI_CONTAINER $PATH_NIFI_START_SCRIPT $1
+}
+
 
 execute() {
     if [ "$1" = "--help" ]; then
-    usage
-    exit 0
-elif [ "$1" = "--start" ]; then
-    run_docker_compose 1
-    init_hdfs
-elif [ "$1" = "--spark-worker" ]; then
-    run_docker_compose $2
-    init_hdfs
-elif [ "$1" = "--restart-dfs" ]; then
-    restart_dfs
-elif [ "$1" = "--hdfs-scale-out" ]; then
-    hdfs_scale_out $3
-elif [ "$1" = "--scale-spark-worker" ]; then
-    run_docker_compose $2
-else
-    usage
-fi
+        usage
+        exit 0
+    elif [ "$1" = "--start" ]; then
+        run_docker_compose 1
+        init_hdfs
+        start-nifi --local
+    elif [ "$1" = "--spark-worker" ]; then
+        run_docker_compose $2
+        init_hdfs
+        start-nifi --local
+    elif [ "$1" = "--restart-dfs" ]; then
+        restart_dfs
+    elif [ "$1" = "--hdfs-scale-out" ]; then
+        hdfs_scale_out $3
+    elif [ "$1" = "--scale-spark-worker" ]; then
+        run_docker_compose $2
+    elif [ "$1" = "--nifi-remote" ]; then
+        start-nifi --remote
+    elif [ "$1" = "--nifi-local" ]; then
+        start-nifi --local
+    else
+        usage
+    fi
 }
 
 # Execute the script
