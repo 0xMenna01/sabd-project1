@@ -43,7 +43,7 @@ class NifiApi:
         )
 
         if connected:
-            LoggerFactory.nifi_logger().nifi_connection_success()
+            LoggerFactory.nifi().nifi_connection_success()
         else:
             raise NifiError('Connection to Nifi failed..')
 
@@ -53,7 +53,7 @@ class NifiApi:
         login = nipyapi.security.service_login(
             service=NifiApi._service_name, username=username, password=password, bool_response=True)
         if login:
-            LoggerFactory.nifi_logger().nifi_login_success()
+            LoggerFactory.nifi().nifi_login_success()
         else:
             raise NifiError('Login failed..')
         return self

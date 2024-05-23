@@ -2,7 +2,8 @@
     "hdfs": {
         "host": "master",
         "port": 54310,
-        "path": "/dataset/dataset.parquet"
+        "datasetPath": "/dataset",
+        "resultsPath": "/results"
     },
     "spark": {
         "master": "spark-master",

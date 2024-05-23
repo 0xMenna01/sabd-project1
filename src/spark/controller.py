@@ -1,24 +1,9 @@
-from enum import Enum
+from model import QueryFramework, QueryNum, DataFormat
 from api.spark import SparkAPI
 from pyspark.rdd import RDD
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.functions import col, to_date
 from pyspark.sql.types import DoubleType
-
-
-class QueryFramework(Enum):
-    """Framework to use for executing queries."""
-    SPARK_CORE = 1
-    SPARK_SQL = 2
-    SPARK_CORE_AND_SQL = 3
-
-
-class QueryNum(Enum):
-    """Specific query to execute."""
-    QUERY_ONE = 1
-    QUERY_TWO = 2
-    QUERY_THREE = 3
-    QUERY_ALL = 4
 
 
 class SparkController:
@@ -30,15 +15,25 @@ class SparkController:
         self._write_results = write_results
         self._write_eval = write_eval
         # Data structures for processing and storing results
+        self._data_format = None
         self._rdd = None
         self._data_frame = None
         self._rdd_results = None
         self._data_frame_results = None
         self._current_evaluation = None
 
+    def set_data_format(self, data_format: DataFormat) -> None:
+        """Set the format of the data to read."""
+        self._data_format = data_format
+
     def prepare_for_processing(self) -> None:
-        # Retrieve the dataframe
-        df = SparkAPI.get().read_parquet_from_hdfs()
+        assert self._data_format is not None, "Data format not set"
+
+        # Retrieve the dataframe by reading from HDFS based on the data format
+        df = SparkAPI.get().read_from_hdfs(self._data_format)
+
+        # Rename date column because sql queries use date as a keyword
+        df.withColumnRenamed("date", "event_date")
 
         # Convert date column to DateType
         df = df.withColumn('date', to_date(col('date'), 'yyyy-MM-dd'))
@@ -56,6 +51,8 @@ class SparkController:
         # We need to trigger an action to actually persist the data
         df.count()
         rdd.count()
+
+        df.createOrReplaceTempView("DisksMonitor")
 
         # Store the preprocecessed data
         self._data_frame = df

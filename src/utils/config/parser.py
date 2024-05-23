@@ -13,7 +13,8 @@ DEFAULT_CONFIG_PATH = os.getenv(
 class HdfsConfig(TypedDict):
     host: str
     port: int
-    path: str
+    datasetPath: str
+    resultsPath: str
 
 
 class SparkConfig(TypedDict):
@@ -83,4 +84,8 @@ class Config:
 
     @property
     def hdfs_dataset_path(self) -> str:
-        return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port) + self._hdfs['path']
+        return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port) + self._hdfs['datasetPath']
+    
+    @property
+    def hdfs_results_path(self) -> str:
+        return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port) + self._hdfs['resultsPath']
