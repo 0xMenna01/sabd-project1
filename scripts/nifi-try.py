@@ -22,11 +22,9 @@ def main():
         nipyapi_delay=nipyapi.config.long_retry_delay,
         nipyapi_max_wait=nipyapi.config.short_max_wait
     )
-    
+
     login = nipyapi.security.service_login(
         service='nifi', username='', password='', bool_response=True)
-    group_id = '8b97d321-018f-1000-b350-3742627a5ed7'
-    template_id = '972c5033-61bb-4eb3-84ad-defb13bf6de0'
 
     nipyapi.canvas.schedule_process_group(
         process_group_id='root', scheduled=True)

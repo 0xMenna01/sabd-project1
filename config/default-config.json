@@ -1,7 +1,8 @@
 {
     "hdfs": {
-        "host": "hdfs-master",
-        "port": 54310
+        "host": "master",
+        "port": 54310,
+        "path": "/dataset/dataset.parquet"
     },
     "spark": {
         "master": "spark-master",
@@ -11,5 +12,9 @@
     "b2": {
         "bucketName": "dataset-project1",
         "fileName": "raw_data_medium-utv_sorted.bin"
+    },
+    "nifi": {
+        "host": "nifi-ingestion",
+        "port": 8443
     }
 }

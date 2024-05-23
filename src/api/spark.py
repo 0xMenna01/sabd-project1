@@ -5,6 +5,7 @@ from pyspark import RDD, SparkContext
 from pyspark.sql import SparkSession
 from utils.logging.factory import LoggerFactory
 from utils.config.factory import ConfigFactory
+from pyspark.sql import DataFrame
 
 
 T = TypeVar("T")
@@ -33,6 +34,10 @@ class SparkAPI:
 
     def parallelize(self, c: Iterable[T], numSlices: Optional[int] = None) -> RDD[T]:
         return self._session.sparkContext.parallelize(c, numSlices)
+
+    def read_parquet_from_hdfs(self) -> DataFrame:
+        config = ConfigFactory.config()
+        return self._session.read.parquet(config.hdfs_dataset_path)
 
 
 class SparkBuilder:

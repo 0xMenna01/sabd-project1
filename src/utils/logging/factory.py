@@ -1,10 +1,11 @@
-from utils.logging.loggers import Logger, AppLogger, SparkLogger, B2Logger
+from utils.logging.loggers import Logger, AppLogger, NifiLogger, SparkLogger, B2Logger
 
 
 class LoggerFactory:
     _app_logger = None
     _spark_logger = None
     _b2_logger = None
+    _nifi_logger = None
 
     @staticmethod
     # create different methods for each logger type
@@ -24,3 +25,9 @@ class LoggerFactory:
         if LoggerFactory._b2_logger is None:
             LoggerFactory._b2_logger = B2Logger()
         return LoggerFactory._b2_logger
+    
+    @staticmethod
+    def nifi_logger() -> NifiLogger:
+        if LoggerFactory._nifi_logger is None:
+            LoggerFactory._nifi_logger = NifiLogger()
+        return LoggerFactory._nifi_logger

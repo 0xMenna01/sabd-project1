@@ -14,9 +14,9 @@ class AppLogger(Logger):
     def __init__(self):
         super().__init__()
 
-    def config_loaded(self, hdfs_config, spark_config):
+    def config_loaded(self, hdfs_config, spark_config, b2_config, nifi_config):
         logger.info(
-            f"{json.dumps(hdfs_config)} and {json.dumps(spark_config)}")
+            f"{json.dumps(hdfs_config)}, {json.dumps(spark_config)}, {json.dumps(b2_config)}, {json.dumps(nifi_config)} loaded successfully..")
 
 
 class SparkLogger(Logger):
@@ -49,3 +49,16 @@ class B2Logger(Logger):
 
     def file_decrypted(self):
         logger.info("File decrypted..")
+
+
+class NifiLogger(Logger):
+    """Logger for Nifi"""
+
+    def __init__(self):
+        super().__init__()
+
+    def nifi_connection_success(self):
+        logger.info("Nifi connection has ben estabilished successfully..")
+
+    def nifi_login_success(self):
+        logger.info("Nifi login successful..")

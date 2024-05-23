@@ -1,8 +1,11 @@
 FROM apache/nifi:latest
 
+
 # Create hadoop and ingestion conf directories
 RUN mkdir $NIFI_HOME/conf/hadoop
 RUN mkdir $NIFI_HOME/conf/nifi-ingestion
+RUN mkdir
+
 
 # Copy hadoop configuration files
 COPY --chown=nifi:nifi conf/hadoop/core-site.xml  $NIFI_HOME/conf/hadoop//hdfs-site.xml
