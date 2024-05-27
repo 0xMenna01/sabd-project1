@@ -22,3 +22,8 @@ class QueryNum(Enum):
     QUERY_TWO = 2
     QUERY_THREE = 3
     QUERY_ALL = 4
+
+
+class SparkError(Exception):
+    """Custom exception for Spark errors"""
+    pass

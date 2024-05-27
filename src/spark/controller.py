@@ -1,32 +1,43 @@
-from model import QueryFramework, QueryNum, DataFormat
+from __future__ import annotations
+
+from model import QueryFramework, QueryNum, DataFormat, SparkError
 from api.spark import SparkAPI
 from pyspark.rdd import RDD
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.functions import col, to_date
 from pyspark.sql.types import DoubleType
+# Spark core queries
+import query.query1
+import query.query2
+import query.query3
+# Spark SQL queries
+import query_sql.query_sql1
+import query_sql.query_sql2
+import query_sql.query_sql3
 
 
 class SparkController:
     """Controller for executing queries and writing results using Spark."""
 
-    def __init__(self, framework: QueryFramework, query_num: QueryNum, write_results: bool = True, write_eval: bool = False):
+    def __init__(self, framework: QueryFramework, query_num: QueryNum):
         self._framework = framework
         self._query_num = query_num
-        self._write_results = write_results
-        self._write_eval = write_eval
         # Data structures for processing and storing results
         self._data_format = None
         self._rdd = None
         self._data_frame = None
-        self._rdd_results = None
-        self._data_frame_results = None
-        self._current_evaluation = None
+        self._rdd_results = []
+        self._data_frame_results = []
+        self._core_evaluations = []
+        self._sql_evaluations = []
 
-    def set_data_format(self, data_format: DataFormat) -> None:
+    def set_data_format(self, data_format: DataFormat) -> SparkController:
         """Set the format of the data to read."""
         self._data_format = data_format
 
-    def prepare_for_processing(self) -> None:
+        return self
+
+    def prepare_for_processing(self) -> SparkController:
         assert self._data_format is not None, "Data format not set"
 
         # Retrieve the dataframe by reading from HDFS based on the data format
@@ -65,73 +76,96 @@ class SparkController:
         self._data_frame = df
         self._rdd = rdd
 
-    def process_data(self) -> None:
+        return self
+
+    def process_data(self) -> SparkController:
         """Process the data using the specified framework and query."""
 
         # Ensure data is prepared for processing
         assert self._data_frame is not None and self._rdd is not None, "Data not prepared for processing"
 
+        # Query with Spark Core
         if self._framework == QueryFramework.SPARK_CORE:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark Core
                 for query in QueryNum:
-                    query_spark_core(query, self._rdd)
+                    (res_rdd, eval_time) = query_spark_core(query, self._rdd)
+                    self._rdd_results.append(res_rdd)
+                    self._core_evaluations.append(eval_time)
             else:
                 # Execute a single query with Spark Core
-                query_spark_core(self._query_num, self._rdd)
+                (res_rdd, eval_time) = query_spark_core(
+                    self._query_num, self._rdd)
+                self._rdd_results = [res_rdd]
+                self._core_evaluations = [eval_time]
 
+        # Query with Spark SQL
         elif self._framework == QueryFramework.SPARK_SQL:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark SQL
                 for query in QueryNum:
-                    query_spark_sql(query, self._data_frame)
+                    (res_df, eval_time) = query_spark_sql(
+                        query, self._data_frame)
+                    self._data_frame_results.append(res_df)
+                    self._sql_evaluations.append(eval_time)
+
             else:
                 # Execute a single query with Spark SQL
-                query_spark_sql(self._query_num, self._data_frame)
+                (res_df, eval_time) = query_spark_sql(
+                    self._query_num, self._data_frame)
+                self._data_frame_results = [res_df]
+                self._sql_evaluations = [eval_time]
 
+        # Query with both Spark Core and Spark SQL
         elif self._framework == QueryFramework.SPARK_CORE_AND_SQL:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark Core and Spark SQL
                 for query in QueryNum:
-                    query_spark_core(query, self._rdd)
-                    query_spark_sql(query, self._data_frame)
+                    (res_rdd, eval_core_time) = query_spark_core(query, self._rdd)
+                    (res_df, eval_sql_time) = query_spark_sql(
+                        query, self._data_frame)
+                    self._rdd_results.append(res_rdd)
+                    self._data_frame_results.append(res_df)
+                    self._core_evaluations.append(eval_core_time)
+                    self._sql_evaluations.append(eval_sql_time)
             else:
                 # Execute a single query with Spark Core and Spark SQL
-                query_spark_core(self._query_num, self._rdd)
-                query_spark_sql(self._query_num, self._data_frame)
+                (res_rdd, eval_core_time) = query_spark_core(
+                    self._query_num, self._rdd)
+                (res_df, eval_sql_time) = query_spark_sql(
+                    self._query_num, self._data_frame)
+                self._rdd_results = [res_rdd]
+                self._data_frame_results = [res_df]
+                self._core_evaluations = [eval_core_time]
+                self._sql_evaluations = [eval_sql_time]
+
+        return self
 
 
-def query_spark_core(query_num: QueryNum, rdd: RDD[Row]) -> None:
+def query_spark_core(query_num: QueryNum, rdd: RDD[Row]) -> tuple[RDD, float]:
     """Executes a query using Spark Core."""
     if query_num == QueryNum.QUERY_ONE:
         # Query 1
-        pass
+        return query.query1.exec_query(rdd)
     elif query_num == QueryNum.QUERY_TWO:
         # Query 2
-        pass
+        return query.query1.exec_query(rdd)
     elif query_num == QueryNum.QUERY_THREE:
-        # Query 3
-        pass
+        return query.query1.exec_query(rdd)
+    else:
+        raise SparkError("Invalid query")
 
 
-def query_spark_sql(query_num: QueryNum, data_frame: DataFrame) -> None:
+def query_spark_sql(query_num: QueryNum, data_frame: DataFrame) -> tuple[DataFrame, float]:
     """Executes a query using Spark SQL."""
     if query_num == QueryNum.QUERY_ONE:
         # Query 1
-        pass
+        return query_sql.query_sql1.exec_query(data_frame)
     elif query_num == QueryNum.QUERY_TWO:
         # Query 2
-        pass
+        return query_sql.query_sql1.exec_query(data_frame)
     elif query_num == QueryNum.QUERY_THREE:
         # Query 3
-        pass
-
-
-def is_valid_serial_number(serial_number: str) -> bool:
-    """
-    Validates the serial number field.
-    :param serial_number: str
-    :return: bool
-    """
-    # Check if the serial number contains only uppercase alphanumeric characters
-    return serial_number.isalnum() and serial_number.isupper()
+        return query_sql.query_sql1.exec_query(data_frame)
+    else:
+        raise SparkError("Invalid SQL query")
