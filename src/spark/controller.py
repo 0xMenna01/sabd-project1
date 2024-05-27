@@ -32,18 +32,23 @@ class SparkController:
         # Retrieve the dataframe by reading from HDFS based on the data format
         df = SparkAPI.get().read_from_hdfs(self._data_format)
 
-        # Rename date column because sql queries use date as a keyword
-        df.withColumnRenamed("date", "event_date")
+        # Delete rows with missing values and duplicates
+        df = df.dropna().drop_duplicates()
 
-        # Convert date column to DateType
-        df = df.withColumn('date', to_date(col('date'), 'yyyy-MM-dd'))
-        # Convert s9_power_on_hours to DoubleType
-        df = df.withColumn('s9_power_on_hours', col(
-            's9_power_on_hours').cast(DoubleType()))
-        # Drop rows with any null values
-        df = df.dropna()
-        # Drop duplicate rows
-        df = df.drop_duplicates()
+        df = (
+            df
+            # Extarct only the date
+            .withColumn('date', to_date(
+                col('date'), 'yyyy-MM-dd'))
+            # Filter out invalid serial numbers
+            .withColumn('serial_number', col('serial_number').rlike('^[A-Z0-9]{8,}$'))
+            # Filter out invalid models
+            .withColumn('model', col('model').rlike('^[A-Z0-9]+$'))
+            # Cast the remaining columns to the correct types
+            .withColumn('failure', col('failure').cast('int'))
+            .withColumn('vault_id', col('vault_id').cast('int'))
+            .withColumn('power_on_hours', col('power_on_hours').cast(DoubleType()))
+        )
 
         # Persist both data frame and RDD (happens lazily)
         df = df.persist()
@@ -53,6 +58,8 @@ class SparkController:
         rdd.count()
 
         df.createOrReplaceTempView("DisksMonitor")
+        # Rename date column because sql queries use date as a keyword
+        df = df.withColumnRenamed("date", "event_date")
 
         # Store the preprocecessed data
         self._data_frame = df
@@ -118,3 +125,13 @@ def query_spark_sql(query_num: QueryNum, data_frame: DataFrame) -> None:
     elif query_num == QueryNum.QUERY_THREE:
         # Query 3
         pass
+
+
+def is_valid_serial_number(serial_number: str) -> bool:
+    """
+    Validates the serial number field.
+    :param serial_number: str
+    :return: bool
+    """
+    # Check if the serial number contains only uppercase alphanumeric characters
+    return serial_number.isalnum() and serial_number.isupper()
