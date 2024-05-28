@@ -7,19 +7,17 @@ from utils.logging.factory import LoggerFactory
 def exec_query(rdd: RDD[Row]) -> tuple[RDD, float]:
     # @param rdd : RDD of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
-    lookup_failures = [2, 3, 4]
-    broadcast_lookup_failures = rdd.context.broadcast(set(lookup_failures))
-
     # Process the RDD
     res_rdd = (
         rdd
-        .filter(lambda x: x.failure > 0)  # Early filter to reduce data size
+        # Early filter to reduce data size
+        .filter(lambda x: x.failure > 0)
         # Convert to ((date, vault_id), failure)
         .map(lambda x: ((x.event_date, x.vault_id), x.failure))
         # Sum failures per (date, vault_id)
         .reduceByKey(lambda acc, failure: acc + failure)
         # Filter based on lookup failures
-        .filter(lambda x: x[1] in broadcast_lookup_failures.value)
+        .filter(lambda x: x[1] in [2, 3, 4])
     )
 
     logger = LoggerFactory.spark()
