@@ -63,7 +63,7 @@ services:
       - project1-network
     environment:
       - SPARK_MODE=worker
-      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=1
     tty: true
     depends_on:

@@ -6,8 +6,7 @@ class DataFormat(Enum):
     """Format of the data to read."""
     PARQUET = 1
     CSV = 2
-    JSON = 3
-    AVRO = 4
+    AVRO = 3
 
 
 class QueryFramework(Enum):

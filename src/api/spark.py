@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from py4j.java_gateway import java_import
 from typing import Iterable, Optional, TypeVar
 from pyspark import RDD, SparkContext
 from pyspark.sql import SparkSession
@@ -14,8 +15,9 @@ T = TypeVar("T")
 class SparkAPI:
     _instance = None
 
-    def __init__(self, session: SparkSession) -> None:
+    def __init__(self, session: SparkSession, fs) -> None:
         self._session: SparkSession = session
+        self._fs = fs
 
     @staticmethod
     def get() -> SparkAPI:
@@ -34,22 +36,24 @@ class SparkAPI:
 
     def parallelize(self, c: Iterable[T], numSlices: Optional[int] = None) -> RDD[T]:
         return self._session.sparkContext.parallelize(c, numSlices)
+    
+    def dataset_exists_on_hdfs(self, ext: str) -> bool:
+        dataset_url = ConfigFactory.config().hdfs_dataset_dir_url
+        hdfs_path= self.context._jvm.Path(dataset_url + "/dataset." + ext)
+        return self._fs.exists(hdfs_path)
+       
 
     def read_parquet_from_hdfs(self) -> DataFrame:
         config = ConfigFactory.config()
-        return self._session.read.parquet(config.hdfs_dataset_path + "/dataset.parquet")
+        return self._session.read.parquet(config.hdfs_dataset_dir_url + "/dataset.parquet")
 
     def read_csv_from_hdfs(self) -> DataFrame:
         config = ConfigFactory.config()
-        return self._session.read.csv(config.hdfs_dataset_path + "/dataset.csv", header=True)
-
-    def read_json_from_hdfs(self) -> DataFrame:
-        config = ConfigFactory.config()
-        return self._session.read.json(config.hdfs_dataset_path + "/dataset.json")
+        return self._session.read.csv(config.hdfs_dataset_dir_url + "/dataset.csv", header=True)
 
     def read_avro_from_hdfs(self) -> DataFrame:
         config = ConfigFactory.config()
-        return self._session.read.format("avro").load(config.hdfs_dataset_path + "/dataset.avro")
+        return self._session.read.format("avro").load(config.hdfs_dataset_dir_url + "/dataset.avro")
 
     def read_from_hdfs(self, data_format: DataFormat) -> DataFrame:
         """Reads the dataset from HDFS in the specified format."""
@@ -58,8 +62,6 @@ class SparkAPI:
             return self.read_parquet_from_hdfs()
         elif data_format == DataFormat.CSV:
             return self.read_csv_from_hdfs()
-        elif data_format == DataFormat.JSON:
-            return self.read_json_from_hdfs()
         else:
             return self.read_avro_from_hdfs()
 
@@ -86,5 +88,17 @@ class SparkBuilder:
         return SparkBuilder(config.spark_master, config.spark_app_name, config.spark_port)
 
     def build(self) -> SparkAPI:
-        context = SparkContext(self._master_url, self._app_name)
-        return SparkAPI(SparkSession(sparkContext=context))
+        session = SparkSession.builder \
+            .appName(self._app_name) \
+            .master(self._master_url) \
+            .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.1") \
+            .getOrCreate()
+       
+        sc = session.sparkContext
+        hadoop_conf = sc._jsc.hadoopConfiguration()
+        hadoop_conf.set("fs.defaultFS", ConfigFactory.config().hdfs_url)
+        java_import(sc._jvm, "org.apache.hadoop.fs.FileSystem")
+        java_import(sc._jvm, "org.apache.hadoop.fs.Path")
+        fs = sc._jvm.FileSystem.get(hadoop_conf)
+        
+        return SparkAPI(session, fs)

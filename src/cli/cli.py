@@ -1,8 +1,9 @@
 import argparse
+import time
 from spark.model import QueryFramework, QueryNum, DataFormat
 from spark.controller import SparkController
 from ingestion import nifi_ingestion
-
+from api.spark import SparkAPI
 
 class Cli:
     def __init__(self):
@@ -13,7 +14,9 @@ class Cli:
         self.parser.add_argument("query", choices=[
                                  "1", "2", "3", "all"], help="The query number to perform")
         self.parser.add_argument("format", choices=[
-                                 "parquet", "csv", "json", "avro", "all"], help="The data format to use")
+                                 "parquet", "csv", "avro", "all"], help="The data format to use")
+        self.parser.add_argument(
+            "--nifi_ingestion", action="store_true", help="Whether to ingest data using NiFi")
         self.parser.add_argument(
             "--local_write", action="store_true", help="Whether to write locally")
         self.parser.add_argument(
@@ -28,9 +31,11 @@ class Cli:
         # Get the formats
         formats = get_formats(args)
 
-        # Ingest data
-        # nifi_ingestion.execute()
+        if args.nifi_ingestion:
+            # Schedule data ingestion
+            nifi_ingestion.execute()
 
+        api = SparkAPI.get()
         spark = SparkController(
             framework, query, local_write=args.local_write, write_evaluation=args.write_evaluation)
         for format in formats:
@@ -70,11 +75,9 @@ def get_formats(args) -> list[DataFormat]:
         return [DataFormat.PARQUET]
     elif args.format == "csv":
         return [DataFormat.CSV]
-    elif args.format == "json":
-        return [DataFormat.JSON]
     elif args.format == "avro":
         return [DataFormat.AVRO]
     elif args.format == "all":
-        return [DataFormat.PARQUET, DataFormat.CSV, DataFormat.JSON, DataFormat.AVRO]
+        return [DataFormat.PARQUET, DataFormat.CSV, DataFormat.AVRO]
     else:
         raise ValueError("Invalid format")

@@ -81,11 +81,19 @@ class Config:
     @property
     def nifi_endpoint(self) -> str:
         return "https://" + self._nifi['host'] + ":" + str(self._nifi['port'])
+    
+    @property
+    def hdfs_dataset_dir(self) -> str:
+        return self._hdfs['datasetPath']
+    
+    @property
+    def hdfs_url(self) -> str:
+        return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port)
 
     @property
-    def hdfs_dataset_path(self) -> str:
-        return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port) + self._hdfs['datasetPath']
+    def hdfs_dataset_dir_url(self) -> str:
+        return self.hdfs_url + self._hdfs['datasetPath']
     
     @property
     def hdfs_results_path(self) -> str:
-        return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port) + self._hdfs['resultsPath']
+        return self.hdfs_url + self._hdfs['resultsPath']

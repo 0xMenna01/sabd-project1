@@ -1,11 +1,12 @@
 from __future__ import annotations
 import os
+import time
 
 from .model import QueryFramework, QueryNum, DataFormat, SparkError, QueryResult
 from api.spark import SparkAPI
 from pyspark.rdd import RDD
 from pyspark.sql import DataFrame, Row
-from pyspark.sql.functions import col, to_date
+from pyspark.sql.functions import col
 from pyspark.sql.types import IntegerType, DoubleType, DateType, StringType
 # Spark core queries
 from .query import query1, query2, query3
@@ -33,6 +34,19 @@ class SparkController:
     def set_data_format(self, data_format: DataFormat) -> SparkController:
         """Set the format of the data to read."""
         self._data_format = data_format
+        
+        # Wait for the dataset to be available on HDFS
+        api = SparkAPI.get()
+        logger = LoggerFactory.spark()
+        logger.log("Checking if dataset exists on HDFS..")
+        logged = False
+        while not api.dataset_exists_on_hdfs(ext=data_format.name.lower()):
+            if not logged:
+                logger.log("Dataset not found on HDFS, waiting..")
+                logged = True
+            time.sleep(5)
+        
+        logger.log("Dataset found on HDFS, proceeding..")
         return self
 
     def prepare_for_processing(self) -> SparkController:
@@ -42,7 +56,7 @@ class SparkController:
         LoggerFactory.spark().log("Reading data from HDFS in format: " + self._data_format.name)
         # Retrieve the dataframe by reading from HDFS based on the data format
         df = SparkAPI.get().read_from_hdfs(self._data_format)
-
+        
         LoggerFactory.spark().log("Preparing data for processing..")
         # Delete rows with missing values and duplicates
         df = df.dropna().dropDuplicates()
@@ -65,17 +79,17 @@ class SparkController:
             .where(col('s9_power_on_hours').isNotNull())
         )
 
-        # Persist both data frame and RDD (happens lazily)
-        df = df.withColumnRenamed("date", "event_date").persist()
-        rdd = df.rdd.map(tuple).persist()
-
-        # We need to trigger an action to actually persist the data
+        df = df.withColumnRenamed("date", "event_date")
+        df = df.persist()
+        rdd = df.rdd.map(tuple)
+        rdd = rdd.persist()
+        # Trigger an action to persist the data
         df.count()
         rdd.count()
-
+        
         # Create a temporary view for Spark SQL queries
         df.createOrReplaceTempView("DisksMonitor")
-
+        
         # Store the preprocecessed data
         self._data_frame = df
         self._rdd = rdd
@@ -95,13 +109,13 @@ class SparkController:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark Core
                 for query in QueryNum:
-                    res = query_spark_core(query, self._rdd)
+                    res = query_spark_core(query, self._data_frame)
                     self._results.append(res)
 
             else:
                 # Execute a single query with Spark Core
                 res = query_spark_core(
-                    self._query_num, self._rdd)
+                    self._query_num, self._data_frame)
                 self._results.append(res)
 
         # Query with Spark SQL
@@ -124,7 +138,7 @@ class SparkController:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark Core and Spark SQL
                 for query in QueryNum:
-                    res = query_spark_core(query, self._rdd)
+                    res = query_spark_core(query, self._data_frame)
                     self._results.append(res)
                     res = query_spark_sql(
                         query, self._data_frame)
@@ -133,7 +147,7 @@ class SparkController:
             else:
                 # Execute a single query with Spark Core and Spark SQL
                 res = query_spark_core(
-                    self._query_num, self._rdd)
+                    self._query_num, self._data_frame)
                 self._results.append(res)
                 res = query_spark_sql(
                     self._query_num, self._data_frame)
@@ -168,19 +182,19 @@ class SparkController:
                 files.write_evaluation(res.name, res.total_exec_time)
 
 
-def query_spark_core(query_num: QueryNum, rdd: RDD) -> QueryResult:
+def query_spark_core(query_num: QueryNum, df: DataFrame) -> QueryResult:
     """Executes a query using Spark Core."""
     if query_num == QueryNum.QUERY_ONE:
         LoggerFactory.spark().log("Executing query 1 with Spark Core..")
         # Query 1
-        return query1.exec_query(rdd)
+        return query1.exec_query(df)
     elif query_num == QueryNum.QUERY_TWO:
         LoggerFactory.spark().log("Executing query 2 with Spark Core..")
         # Query 2
-        return query2.exec_query(rdd)
+        return query2.exec_query(df)
     elif query_num == QueryNum.QUERY_THREE:
         LoggerFactory.spark().log("Executing query 3 with Spark Core..")
-        return query1.exec_query(rdd)
+        return query1.exec_query(df)
     else:
         raise SparkError("Invalid query")
 
