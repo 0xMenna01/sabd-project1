@@ -163,6 +163,8 @@ cython_debug/
 # Secret configuration
 docker/scripts/nifi/remote-conf.json
 docker/.env
+docker/client/config/.env
+.env
 
 # Dataset
 docker/nifi/nifi-ingestion/enc-dataset/raw_data_medium-utv_sorted.bin

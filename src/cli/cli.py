@@ -1,6 +1,7 @@
 import argparse
 from spark.model import QueryFramework, QueryNum, DataFormat
 from spark.controller import SparkController
+from ingestion import nifi_ingestion
 
 
 class Cli:
@@ -10,9 +11,13 @@ class Cli:
         self.parser.add_argument("framework", choices=[
                                  "spark-core", "spark-sql", "spark-all"], help="The Spark framework to use")
         self.parser.add_argument("query", choices=[
-                                 "query1", "query2", "query3", "query-all"], help="The query number to perform")
+                                 "1", "2", "3", "all"], help="The query number to perform")
         self.parser.add_argument("format", choices=[
-                                 "format-parquet", "format-csv", "format-json", "format-avro", "format-all"], help="The data format to use")
+                                 "parquet", "csv", "json", "avro", "all"], help="The data format to use")
+        self.parser.add_argument(
+            "--local_write", action="store_true", help="Whether to write locally")
+        self.parser.add_argument(
+            "--write_evaluation", action="store_true", help="Whether to write for evaluation")
 
     def start(self):
         args = self.parser.parse_args()
@@ -23,14 +28,17 @@ class Cli:
         # Get the formats
         formats = get_formats(args)
 
-        spark = SparkController(framework, query)
+        # Ingest data
+        # nifi_ingestion.execute()
+
+        spark = SparkController(
+            framework, query, local_write=args.local_write, write_evaluation=args.write_evaluation)
         for format in formats:
-            (
-                spark
-                .set_data_format(format)
-                .prepare_for_processing()
-                .process_data()
-            )
+            spark \
+                .set_data_format(format) \
+                .prepare_for_processing() \
+                .process_data() \
+                .write_results()
 
 
 def get_framework(args) -> QueryFramework:
@@ -38,34 +46,35 @@ def get_framework(args) -> QueryFramework:
         return QueryFramework.SPARK_CORE
     elif args.framework == "spark-sql":
         return QueryFramework.SPARK_SQL
-    else:
+    elif args.framework == "spark-all":
         return QueryFramework.SPARK_CORE_AND_SQL
+    else:
+        raise ValueError("Invalid framework")
 
 
 def get_query(args) -> QueryNum:
-    if args.query == "query1":
+    if args.query == "1":
         return QueryNum.QUERY_ONE
-    elif args.query == "query2":
+    elif args.query == "2":
         return QueryNum.QUERY_TWO
-    elif args.query == "query3":
+    elif args.query == "3":
         return QueryNum.QUERY_THREE
-    else:
+    elif args.query == "all":
         return QueryNum.QUERY_ALL
+    else:
+        raise ValueError("Invalid query")
 
 
 def get_formats(args) -> list[DataFormat]:
-    if args.format == "format-parquet":
+    if args.format == "parquet":
         return [DataFormat.PARQUET]
-    elif args.format == "format-csv":
+    elif args.format == "csv":
         return [DataFormat.CSV]
-    elif args.format == "format-json":
+    elif args.format == "json":
         return [DataFormat.JSON]
-    elif args.format == "format-avro":
+    elif args.format == "avro":
         return [DataFormat.AVRO]
+    elif args.format == "all":
+        return [DataFormat.PARQUET, DataFormat.CSV, DataFormat.JSON, DataFormat.AVRO]
     else:
-        return [
-            DataFormat.PARQUET,
-            DataFormat.CSV,
-            DataFormat.JSON,
-            DataFormat.AVRO
-        ]
+        raise ValueError("Invalid format")

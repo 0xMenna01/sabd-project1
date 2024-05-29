@@ -2,9 +2,10 @@ import time
 from pyspark.rdd import RDD
 from pyspark.sql import Row, DataFrame, functions as F
 from utils.logging.factory import LoggerFactory
+from spark.model import SparkActionResult, QueryResult
 
 
-def exec_query(rdd: RDD[Row]) -> tuple[tuple[RDD, RDD], float]:
+def exec_query(rdd: RDD[Row]) -> QueryResult:
     # @param rdd : RDD of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
     # Compute the number of failures for each (vault_id, model) pairs
@@ -17,6 +18,8 @@ def exec_query(rdd: RDD[Row]) -> tuple[tuple[RDD, RDD], float]:
         # Sum failures for each (vault_id, model)
         .reduceByKey(lambda acc, failure: acc + failure)
     )
+    # Cache the partial RDD to avoid recomputations
+    partial_rdd.cache()
 
     # Compute the top 10 models with the most failures
     models_failures = (
@@ -41,13 +44,42 @@ def exec_query(rdd: RDD[Row]) -> tuple[tuple[RDD, RDD], float]:
     )
 
     logger = LoggerFactory.spark()
-    logger.log("Starting to evaluate query 2..")
-    start_time = time.time()
-    # Triggers two actions on the resulting RDDs
-    # Get top 10 models with most failures
-    models_failures.take(10)
-    # Get top 10 vaults with most failures
-    vaults_failures.take(10)
-    end_time = time.time()
 
-    return ((models_failures, vaults_failures), end_time - start_time)
+    logger.log("Starting to evaluate action 1/2 of query 2..")
+    start_time = time.time()
+    # Get top 10 models with most failures
+    # This triggers an action that persists the `partial_rdd` in memory
+    top_models_failures = models_failures.take(10)
+    end_time = time.time()
+    time_action1 = end_time - start_time
+    # Create the SparkActionResult
+    res1 = SparkActionResult(
+        name="query2-1",
+        header=["model", "failures_count"],
+        sort_list=["failures_count", "model"],
+        result=top_models_failures,
+        execution_time=time_action1,
+        ascending_list=[False, True]
+    )
+
+    logger.log("Starting to evaluate action 2/2 of query 2..")
+    start_time = time.time()
+    # Get top 10 vaults with most failures
+    # This triggers an action that reuses the persisted `partial_rdd`
+    top_vaults_failures = vaults_failures.take(10)
+    end_time = time.time()
+    time_action2 = end_time - start_time
+    # Create the SparkActionResult
+    res2 = SparkActionResult(
+        name="query2-2",
+        header=["vault_id", "failures_count", "list_of_models"],
+        sort_list=["failures_count", "vault_id"],
+        result=top_vaults_failures,
+        execution_time=time_action2,
+        ascending_list=[False, True]
+    )
+
+    res = QueryResult(name="query2-evaluation", results=[res1, res2])
+    logger.log(f"Query 2 took {res.total_exec_time} seconds..")
+
+    return res

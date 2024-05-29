@@ -1,8 +1,12 @@
+from cli.cli import Cli
+import dotenv
 
 
-def main() -> int:
-    exit_code = 0  # Actually run the CLI application
-    return exit_code
+def main() -> None:
+    # Load environment variables
+    dotenv.load_dotenv()
+    # Start the CLI
+    Cli().start()
 
 
 if __name__ == "__main__":

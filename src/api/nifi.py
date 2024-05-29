@@ -15,9 +15,6 @@ class NifiError(Exception):
 
 class NifiApi:
 
-    _root_process_group_id = 'root'
-    _service_name = 'nifi'
-
     def __init__(self) -> None:
         pass
 
@@ -51,7 +48,7 @@ class NifiApi:
 
     def login(self, username: str, password: str) -> NifiApi:
         login = nipyapi.security.service_login(
-            service=NifiApi._service_name, username=username, password=password, bool_response=True)
+            service='nifi', username=username, password=password, bool_response=True)
         if login:
             LoggerFactory.nifi().nifi_login_success()
         else:
@@ -60,4 +57,5 @@ class NifiApi:
 
     def schedule_hdfs_ingestion(self) -> None:
         nipyapi.canvas.schedule_process_group(
-            process_group_id=NifiApi._root_process_group_id, scheduled=True)
+            process_group_id='root', scheduled=True)
+        LoggerFactory.nifi().log("HDFS Ingestion scheduled..")

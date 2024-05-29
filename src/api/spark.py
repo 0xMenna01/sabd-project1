@@ -6,8 +6,7 @@ from pyspark.sql import SparkSession
 from utils.logging.factory import LoggerFactory
 from utils.config.factory import ConfigFactory
 from pyspark.sql import DataFrame
-from spark.model import DataFormat
-
+from spark.model import DataFormat, SparkActionResult
 
 T = TypeVar("T")
 
@@ -64,13 +63,14 @@ class SparkAPI:
         else:
             return self.read_avro_from_hdfs()
 
-    def write_results_to_hdfs_as_csv(self, df: DataFrame, filename: str) -> None:
-        config = ConfigFactory.config()
-        df.write.csv(
-            config.hdfs_results_path + "/" + filename,
-            mode="overwrite",
-            header=True
-        )
+    def df_from_action_result(self, action_res: SparkActionResult) -> DataFrame:
+        df = SparkAPI.get().session.createDataFrame(
+            action_res.result, schema=action_res.header)
+
+        if action_res.ascending_list is None:
+            return df.sort(action_res.sort_list).coalesce(1)
+        else:
+            return df.sort(action_res.sort_list, ascending=action_res.ascending_list).coalesce(1)
 
 
 class SparkBuilder:

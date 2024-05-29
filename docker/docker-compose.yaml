@@ -4,6 +4,7 @@ services:
   nifi:
     container_name: nifi-ingestion
     build: ./nifi/nifi-ingestion/
+    hostname: nifi-ingestion
     ports:
       - '8443:8443'
     networks:
@@ -23,6 +24,7 @@ services:
   hdfs-master:
     image: matnar/hadoop   
     container_name: master
+    hostname: master
     ports:
       - "9870:9870"
       - "54310:54310"
