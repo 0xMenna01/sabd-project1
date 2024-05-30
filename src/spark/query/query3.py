@@ -38,7 +38,7 @@ def exec_query(rdd: RDD[Row]) -> QueryResult:
         # Map to (failure, s9_power_on_hours)
         .map(lambda x: (x[0][0],x[1][1]))
         # Sorts records based on S9 column
-        .sortBy(x[1])
+        .sortBy(lambda x: x[1])
         # Aggregate by key to 'transpose' s9 values
         .aggregateByKey(start_value, seq_op, comb_op)
         # Map to get stats from this list: min=list[0], max, 25 percentile, 50 percentile, 75 percentile, count
