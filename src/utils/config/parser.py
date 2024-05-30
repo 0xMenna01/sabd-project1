@@ -95,5 +95,6 @@ class Config:
         return self.hdfs_url + self._hdfs['datasetPath']
     
     @property
-    def hdfs_results_path(self) -> str:
+    def hdfs_results_dir_url(self) -> str:
         return self.hdfs_url + self._hdfs['resultsPath']
+    

@@ -42,14 +42,6 @@ def results_path_from_filename(filename: str) -> str:
     return os.path.join(QUERY_RESULTS_PATH, filename)
 
 
-def write_to_hdfs_as_csv(df: DataFrame, filename: str) -> None:
-
-    df.write.csv(
-        ConfigFactory.config().hdfs_results_path + "/" + filename,
-        mode="overwrite",
-        header=True,
-    )
-
 
 def write_result_as_csv(res_df: DataFrame, out_path: str) -> None:
     header = res_df.schema.names
