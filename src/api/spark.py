@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 
 from py4j.java_gateway import java_import
 from typing import Iterable, Optional, TypeVar
@@ -34,22 +35,28 @@ class SparkAPI:
     def session(self) -> SparkSession:
         return self._session
 
-    def parallelize(self, c: Iterable[T], numSlices: Optional[int] = None) -> RDD[T]:
-        return self._session.sparkContext.parallelize(c, numSlices)
-
     def file_exists_on_hdfs(self, filename: str, ext: str) -> bool:
         dataset_url = ConfigFactory.config().hdfs_dataset_dir_url
         hdfs_path = self.context._jvm.Path(  # type: ignore
             dataset_url + "/" + filename + "." + ext)
         return self._fs.exists(hdfs_path)
 
+    def wait_for_file_on_hdfs(self, filename: str, format: DataFormat) -> None:
+        # Wait for the dataset to be available on HDFS
+        logger = LoggerFactory.spark()
+        logger.log("Checking if dataset exists on HDFS..")
+        logged = False
+        while not self.file_exists_on_hdfs(filename, ext=format.name.lower()):
+            if not logged:
+                logger.log("Dataset not found on HDFS, waiting..")
+                logged = True
+            time.sleep(5)
+
+        logger.log("Dataset found on HDFS, proceeding..")
+
     def read_parquet_from_hdfs(self, filename: str) -> DataFrame:
         config = ConfigFactory.config()
         return self._session.read.parquet(config.hdfs_dataset_dir_url + "/" + filename + ".parquet", header=True)
-
-    def read_csv_from_hdfs(self, filename: str) -> DataFrame:
-        config = ConfigFactory.config()
-        return self._session.read.csv(config.hdfs_dataset_dir_url + "/" + filename + ".csv", header=True)
 
     def read_avro_from_hdfs(self, filename: str) -> DataFrame:
         config = ConfigFactory.config()
@@ -60,10 +67,10 @@ class SparkAPI:
 
         if data_format == DataFormat.PARQUET:
             return self.read_parquet_from_hdfs(filename)
-        elif data_format == DataFormat.CSV:
-            return self.read_csv_from_hdfs(filename)
-        else:
+        elif data_format == DataFormat.AVRO:
             return self.read_avro_from_hdfs(filename)
+        else:
+            raise ValueError("Invalid data format")
 
     def df_from_action_result(self, action_res: SparkActionResult) -> DataFrame:
         df = SparkAPI.get().session.createDataFrame(
@@ -79,9 +86,7 @@ class SparkAPI:
         df = self.read_from_hdfs(format, filename)
         # Persist the DataFrame and RDD
         df = df.persist()
-        # Convert rdd to tuple
-        rdd = df.rdd.map(tuple)
-        rdd = rdd.persist()
+        rdd = df.rdd.persist()
         # Trigger an action to persist the data
         df.count()
         rdd.count()
@@ -99,12 +104,11 @@ class SparkAPI:
         if format == DataFormat.PARQUET:
             df.write.parquet(config.hdfs_dataset_dir_url +
                              "/" + filename, mode="overwrite")
-        elif format == DataFormat.CSV:
-            df.write.csv(config.hdfs_dataset_dir_url + "/" +
-                         filename, mode="overwrite", header=True)
-        else:
+        elif format == DataFormat.AVRO:
             df.write.format("avro").save(
                 config.hdfs_dataset_dir_url + "/" + filename, mode="overwrite", header=True)
+        else:
+            raise ValueError("Invalid data format")
 
     def write_results_to_hdfs(self, df: DataFrame, filename: str) -> None:
         """Write query result to HDFS."""

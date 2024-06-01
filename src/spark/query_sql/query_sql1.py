@@ -9,15 +9,13 @@ def exec_query(df: DataFrame) -> QueryResult:
     # @param df : DataFrame of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
     # SQL query
-    sql_query = """
+    result_df = SparkAPI.get().session.sql("""
         SELECT event_date, vault_id, SUM(failure) AS  failures_count
         FROM DisksMonitor
         WHERE failure > 0
         GROUP BY event_date, vault_id
         HAVING failures_count IN (2, 3, 4)
-    """
-
-    result_df = SparkAPI.get().session.sql(sql_query)
+    """)
 
     logger = LoggerFactory.spark()
     logger.log("Starting to evaluate action of SQL query 1..")

@@ -36,23 +36,15 @@ class SparkController:
         """Set the format of the data to read."""
         self._data_format = data_format
 
-        # Wait for the dataset to be available on HDFS
-        api = SparkAPI.get()
-        logger = LoggerFactory.spark()
-        logger.log("Checking if dataset exists on HDFS..")
-        logged = False
-        while not api.file_exists_on_hdfs(DATASET_FILE_NAME, ext=data_format.name.lower()):
-            if not logged:
-                logger.log("Dataset not found on HDFS, waiting..")
-                logged = True
-            time.sleep(5)
-
-        logger.log("Dataset found on HDFS, proceeding..")
         return self
 
     def prepare_for_processing(self) -> SparkController:
-
+        """Preprocess data and store the result on HDFS for checkpointing and later processing."""
         assert self._data_format is not None, "Data format not set"
+        api = SparkAPI.get()
+
+        # Wait for the dataset to be available on HDFS
+        api.wait_for_file_on_hdfs(DATASET_FILE_NAME, self._data_format)
 
         LoggerFactory.spark().log("Reading data from HDFS in format: " + self._data_format.name)
         # Retrieve the dataframe by reading from HDFS based on the data format
@@ -84,15 +76,15 @@ class SparkController:
 
         LoggerFactory.spark().log(
             "Data prepared for processing, storing it on HDFS for checkpointing and later usage.")
-        SparkAPI.get().write_to_hdfs(
+        api.write_to_hdfs(
             df, filename=PRE_PROCESSED_FILE_NAME, format=self._data_format)
 
         return self
 
     def process_data(self) -> SparkController:
         """Process the data using the specified framework and query."""
-
         assert self._data_format is not None, "Data format not set"
+
         # Ensure data is prepared for processing
         api = SparkAPI.get()
         assert api.file_exists_on_hdfs(PRE_PROCESSED_FILE_NAME, self._data_format.name.lower(
@@ -157,6 +149,7 @@ class SparkController:
 
     def write_results(self) -> None:
         """Write the results."""
+        assert self._data_format is not None, "Data format not set"
         assert self._results, "No results to write"
 
         api = SparkAPI.get()
@@ -178,7 +171,8 @@ class SparkController:
 
             if self._write_evaluation:
                 LoggerFactory.spark().log("Writing evaluation..")
-                files.write_evaluation(res.name, res.total_exec_time)
+                files.write_evaluation(
+                    res.name, self._data_format.name.lower(), res.total_exec_time)
 
 
 def query_spark_core(query_num: QueryNum, rdd: RDD, df: DataFrame) -> tuple[QueryResult, QueryResult]:
@@ -207,10 +201,10 @@ def query_spark_sql(query_num: QueryNum, data_frame: DataFrame) -> QueryResult:
     elif query_num == QueryNum.QUERY_TWO:
         LoggerFactory.spark().log("Executing query 2 with Spark SQL..")
         # Query 2
-        return query_sql1.exec_query(data_frame)
+        return query_sql2.exec_query(data_frame)
     elif query_num == QueryNum.QUERY_THREE:
         LoggerFactory.spark().log("Executing query 3 with Spark SQL..")
         # Query 3
-        return query_sql1.exec_query(data_frame)
+        return query_sql3.exec_query(data_frame)
     else:
         raise SparkError("Invalid SQL query")

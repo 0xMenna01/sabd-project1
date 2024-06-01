@@ -5,8 +5,7 @@ from typing import List
 class DataFormat(Enum):
     """Format of the data to read."""
     PARQUET = 1
-    CSV = 2
-    AVRO = 3
+    AVRO = 2
 
 
 class QueryFramework(Enum):

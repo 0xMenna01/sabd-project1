@@ -6,7 +6,7 @@ from spark.model import SparkActionResult, QueryResult
 from api.spark import SparkAPI
 
 HEADER = ["event_date", "vault_id", "failures_count"]
-SORT_LIST = ["event_date", "vault_id", "failures_count"]
+SORT_LIST = HEADER
 
 
 def exec_query_df(df: DataFrame) -> QueryResult:
@@ -49,9 +49,9 @@ def exec_query_rdd(rdd: RDD) -> QueryResult:
     res_rdd = (
         rdd
         # Early filter to reduce data size
-        .filter(lambda x: x[3] > 0)
+        .filter(lambda x: x.failure > 0)
         # Convert to ((event_date, vault_id), failure)
-        .map(lambda x: ((x[0], x[4]), x[3]))
+        .map(lambda x: ((x.event_date, x.vault_id), x.failure))
         # Sum failures per (date, vault_id)
         .reduceByKey(lambda acc, failure: acc + failure)
         # Filter based on lookup failures
@@ -67,7 +67,7 @@ def exec_query_rdd(rdd: RDD) -> QueryResult:
     out_res = res_rdd.collect()
     end_time = time.time()
     logger.log("Finished evaluating..")
-    
+
     res = QueryResult(name="query1-rdd-evalutaion", results=[SparkActionResult(
         name="query1-rdd",
         header=HEADER,
