@@ -58,7 +58,7 @@ class B2ApiForDataset:
     @staticmethod
     def get() -> B2ApiForDataset:
         if B2ApiForDataset._instance is None:
-            LoggerFactory.b2_logger().b2_api_loaded()
+            LoggerFactory.b2().b2_api_loaded()
             B2ApiForDataset._instance = B2ApiBuilder.from_default_keys().build()
         return B2ApiForDataset._instance
 
@@ -67,7 +67,7 @@ class B2ApiForDataset:
         return self._api
 
     def get_dataset(self) -> str:
-        logger = LoggerFactory.b2_logger()
+        logger = LoggerFactory.b2()
         config = ConfigFactory.config()
 
         # Load the bucket
