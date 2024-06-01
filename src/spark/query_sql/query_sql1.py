@@ -3,6 +3,7 @@ from pyspark.sql import DataFrame
 from api.spark import SparkAPI
 from utils.logging.factory import LoggerFactory
 from spark.model import SparkActionResult, QueryResult
+from spark.query.query1 import HEADER, SORT_LIST
 
 
 def exec_query(df: DataFrame) -> QueryResult:
@@ -26,8 +27,8 @@ def exec_query(df: DataFrame) -> QueryResult:
 
     res = QueryResult(name="sql-query1-evaluation", results=[SparkActionResult(
         name="sql-query1",
-        header=["event_date", "vault_id", "failures_count"],
-        sort_list=["event_date", "vault_id", "failures_count"],
+        header=HEADER,
+        sort_list=SORT_LIST,
         result=res,
         execution_time=end_time - start_time
     )])

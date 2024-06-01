@@ -73,6 +73,7 @@ class SparkAPI:
             raise ValueError("Invalid data format")
 
     def df_from_action_result(self, action_res: SparkActionResult) -> DataFrame:
+
         df = SparkAPI.get().session.createDataFrame(
             action_res.result, schema=action_res.header)
 

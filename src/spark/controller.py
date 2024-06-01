@@ -97,17 +97,15 @@ class SparkController:
         # Query with Spark Core
         if self._framework == QueryFramework.SPARK_CORE:
             if self._query_num == QueryNum.QUERY_ALL:
-                # Execute all queries with Spark Core (RDD and DataFrame)
+                # Execute all queries with Spark Core
                 for query in QueryNum:
-                    (res_rdd, res_df) = query_spark_core(query, rdd, df)
-                    self._results.append(res_rdd)
-                    self._results.append(res_df)
+                    res = query_spark_core(query, rdd)
+                    self._results.append(res)
 
             else:
-                # Execute a single query with Spark Core (RDD and DataFrame)
-                (res_rdd, res_df) = query_spark_core(self._query_num, rdd, df)
-                self._results.append(res_rdd)
-                self._results.append(res_df)
+                # Execute a single query with Spark Core
+                res = query_spark_core(self._query_num, rdd)
+                self._results.append(res)
 
         # Query with Spark SQL
         elif self._framework == QueryFramework.SPARK_SQL:
@@ -127,20 +125,18 @@ class SparkController:
         # Query with both Spark Core and Spark SQL
         elif self._framework == QueryFramework.SPARK_CORE_AND_SQL:
             if self._query_num == QueryNum.QUERY_ALL:
-                # Execute all queries with Spark Core (RDD and DataFrame) and Spark SQL
+                # Execute all queries with Spark Core and Spark SQL
                 for query in QueryNum:
-                    (res_rdd, res_df) = query_spark_core(query, rdd, df)
-                    self._results.append(res_rdd)
-                    self._results.append(res_df)
+                    res = query_spark_core(query, rdd)
+                    self._results.append(res)
                     res = query_spark_sql(
                         query, df)
                     self._results.append(res)
 
             else:
-                # Execute a single query with Spark Core (RDD and DataFrame) and Spark SQL
-                (res_rdd, res_df) = query_spark_core(self._query_num, rdd, df)
-                self._results.append(res_rdd)
-                self._results.append(res_df)
+                # Execute a single query with Spark Core and Spark SQL
+                res = query_spark_core(self._query_num, rdd)
+                self._results.append(res)
                 res = query_spark_sql(
                     self._query_num, df)
                 self._results.append(res)
@@ -175,19 +171,19 @@ class SparkController:
                     res.name, self._data_format.name.lower(), res.total_exec_time)
 
 
-def query_spark_core(query_num: QueryNum, rdd: RDD, df: DataFrame) -> tuple[QueryResult, QueryResult]:
+def query_spark_core(query_num: QueryNum, rdd: RDD) -> QueryResult:
     """Executes a query using Spark Core. Using both RDD and DataFrame."""
     if query_num == QueryNum.QUERY_ONE:
         LoggerFactory.spark().log("Executing query 1 with Spark Core..")
         # Query 1
-        return (query1.exec_query_rdd(rdd), query1.exec_query_df(df))
+        return query1.exec_query(rdd)
     elif query_num == QueryNum.QUERY_TWO:
         LoggerFactory.spark().log("Executing query 2 with Spark Core..")
         # Query 2
-        return (query2.exec_query_rdd(rdd), query2.exec_query_df(df))
+        return query2.exec_query(rdd)
     elif query_num == QueryNum.QUERY_THREE:
         LoggerFactory.spark().log("Executing query 3 with Spark Core..")
-        return (query3.exec_query_rdd(rdd), query3.exec_query_df(df))
+        return query3.exec_query(rdd)
     else:
         raise SparkError("Invalid query")
 

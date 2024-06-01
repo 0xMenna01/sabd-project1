@@ -1,5 +1,0 @@
-query,format,worker_nodes,execution_time
-query2-rdd-evaluation,avro,1,0.48632144927978516
-query2-df-evaluation,avro,1,4.891803979873657
-query2-rdd-evaluation,avro,1,0.5597989559173584
-query2-df-evaluation,avro,1,4.807981014251709
