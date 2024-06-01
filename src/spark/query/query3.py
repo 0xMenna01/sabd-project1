@@ -49,7 +49,7 @@ def exec_query(rdd: RDD[Row]) -> QueryResult:
     logger.log("Starting to evaluate the spark action of query 3..")
     start_time = time.time()
     # Triggers the action
-    out_res = res_rdd.collect()
+    out_res = rdd_res.collect()
     end_time = time.time()
     logger.log("Finished evaluating..")
 
