@@ -9,16 +9,16 @@ HEADER = ["event_date", "vault_id", "failures_count"]
 SORT_LIST = HEADER
 
 
-def exec_query(rdd: RDD[Row]) -> QueryResult:
+def exec_query(rdd: RDD[tuple]) -> QueryResult:
     # @param rdd : RDD of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
     # Process the RDD
     res_rdd = (
         rdd
         # Early filter to reduce data size
-        .filter(lambda x: x.failure > 0)
+        .filter(lambda x: x[3] > 0)
         # Convert to ((event_date, vault_id), failure)
-        .map(lambda x: ((x.event_date, x.vault_id), x.failure))
+        .map(lambda x: ((x[0], x[4]), x[3]))
         # Sum failures per (date, vault_id)
         .reduceByKey(lambda acc, failure: acc + failure)
         # Filter based on lookup failures

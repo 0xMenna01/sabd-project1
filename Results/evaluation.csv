@@ -1,0 +1,6 @@
+query,format,worker_nodes,execution_time
+query1,avro,1,0.7413792610168457
+query1,avro,1,0.7543091773986816
+sql-query1,avro,1,0.5724234580993652
+query2,avro,1,0.5003499984741211
+sql-query2,avro,1,1.2036969661712646

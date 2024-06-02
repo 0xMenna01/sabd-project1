@@ -4,9 +4,8 @@ from pyspark.sql import Row, DataFrame, functions as F
 from utils.logging.factory import LoggerFactory
 from spark.model import SparkActionResult, QueryResult
 
+
 # Compute p percentile of an already sorted list
-
-
 def get_percentile(p: float, l: list) -> float:
     k = p * (len(l) - 1)
     # k is an integer
@@ -30,13 +29,13 @@ def comb_op(x, y): return (x+y)
 # **********************************************************************************************************************************************
 
 
-def exec_query(rdd: RDD[Row]) -> QueryResult:
+def exec_query(rdd: RDD[tuple]) -> QueryResult:
     # @param rdd : RDD of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
     rdd_res = (
         rdd
         # Divide in failed and not failed
-        .map(lambda x: ((x.failure, x.serial_number), (x.event_date, x.s9_power_on_hours)))
+        .map(lambda x: ((x[3], x[1]), (x[0], x[5])))
         # Reduce by taking only the records with the latest day
         .reduceByKey(lambda x, y: x if (x[0] > y[0]) else y)
         # Map to (failure, s9_power_on_hours)

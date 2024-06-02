@@ -87,7 +87,9 @@ class SparkAPI:
         df = self.read_from_hdfs(format, filename)
         # Persist the DataFrame and RDD
         df = df.persist()
-        rdd = df.rdd.persist()
+        # Convert rdd to tuple (much more efficient than Row)
+        rdd = df.rdd.map(tuple)
+        rdd = rdd.persist()
         # Trigger an action to persist the data
         df.count()
         rdd.count()

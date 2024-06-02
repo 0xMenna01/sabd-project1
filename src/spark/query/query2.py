@@ -11,16 +11,16 @@ VAULTS_HEADER = ["vault_id", "failures_count", "list_of_models"]
 VAULTS_SORT_LIST = ["failures_count", "vault_id"]
 
 
-def exec_query(rdd: RDD[Row]) -> QueryResult:
+def exec_query(rdd: RDD[tuple]) -> QueryResult:
     # @param rdd : RDD of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
     # Compute the number of failures for each (vault_id, model) pairs
     partial_rdd = (
         rdd
         # Filter on failure > 0
-        .filter(lambda x: x.failure > 0)
+        .filter(lambda x: x[3] > 0)
         # Convert to ((vault_id, model), failure)
-        .map(lambda x: ((x.vault_id, x.model), x.failure))
+        .map(lambda x: ((x[4], x[2]), x[3]))
         # Sum failures for each (vault_id, model)
         .reduceByKey(lambda acc, failure: acc + failure)
     )

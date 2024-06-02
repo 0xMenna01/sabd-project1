@@ -26,7 +26,7 @@ def exec_query(df: DataFrame) -> QueryResult:
     end_time = time.time()
     logger.log("Finished evaluating..")
 
-    res = QueryResult(name="sql-query1-evaluation", results=[SparkActionResult(
+    res = QueryResult(name="sql-query1", results=[SparkActionResult(
         name="sql-query1",
         header=HEADER,
         sort_list=SORT_LIST,
