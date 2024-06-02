@@ -40,10 +40,12 @@ def exec_query(df: DataFrame) -> QueryResult:
     res = result_df.collect()
     end_time = time.time()
 
-    res = QueryResult(name="sql-query3-evaluation", results=[SparkActionResult(
+    res = QueryResult(name="sql-query3", results=[SparkActionResult(
         name="sql-query3",
-        header=["failure", "min", "max", "25_percentile", "50_percentile", "75_percentile", "count"],
-        sort_list=["failure", "min", "max", "25_percentile", "50_percentile", "75_percentile", "count"],
+        header=["failure", "min", "max", "25_percentile",
+                "50_percentile", "75_percentile", "count"],
+        sort_list=["failure", "min", "max", "25_percentile",
+                   "50_percentile", "75_percentile", "count"],
         result=res,
         execution_time=end_time - start_time
     )])

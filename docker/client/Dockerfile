@@ -1,13 +1,9 @@
 FROM python:3.11
 
-# Update packages
-RUN apt-get update && apt-get install -y \
-    openjdk-17-jdk \
-    && rm -rf /var/lib/apt/lists/*
+# Update packages and install OpenJDK
+RUN apt-get update && apt-get install -y openjdk-17-jdk && rm -rf /var/lib/apt/lists/*
 
-# Set Java environment variables
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
-
+# Add spark user
 RUN useradd -m spark -s /bin/bash
 
 WORKDIR /home/spark

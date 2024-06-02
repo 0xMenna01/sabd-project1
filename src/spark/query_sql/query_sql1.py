@@ -24,6 +24,7 @@ def exec_query(df: DataFrame) -> QueryResult:
     # Triggers an action
     res = result_df.collect()
     end_time = time.time()
+    logger.log("Finished evaluating..")
 
     res = QueryResult(name="sql-query1-evaluation", results=[SparkActionResult(
         name="sql-query1",

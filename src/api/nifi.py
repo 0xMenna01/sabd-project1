@@ -25,7 +25,7 @@ class NifiApi:
         # Keep logs minimal
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        # disable TLS check (trusted network configu)
+        # disable TLS check (trusted network configuration)
         nipyapi.config.nifi_config.verify_ssl = False
         nipyapi.config.registry_config.verify_ssl = False
 

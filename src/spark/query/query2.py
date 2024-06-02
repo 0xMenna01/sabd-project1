@@ -59,14 +59,14 @@ def exec_query(rdd: RDD[Row]) -> QueryResult:
     # This triggers an action that persists the `partial_rdd` in memory
     top_models_failures = models_failures.take(10)
     end_time = time.time()
-    time_action1 = end_time - start_time
+    logger.log("Finished evaluating..")
     # Create the SparkActionResult
     res1 = SparkActionResult(
         name="query2-1",
         header=MODELS_HEADER,
         sort_list=MODELS_SORT_LIST,
         result=top_models_failures,
-        execution_time=time_action1,
+        execution_time=end_time - start_time,
         ascending_list=[False, True]
     )
 
@@ -76,14 +76,15 @@ def exec_query(rdd: RDD[Row]) -> QueryResult:
     # This triggers an action that reuses the persisted `partial_rdd`
     top_vaults_failures = vaults_failures.take(10)
     end_time = time.time()
-    time_action2 = end_time - start_time
+    logger.log("Finished evaluating..")
+
     # Create the SparkActionResult
     res2 = SparkActionResult(
         name="query2-2",
         header=VAULTS_HEADER,
         sort_list=VAULTS_SORT_LIST,
         result=top_vaults_failures,
-        execution_time=time_action2,
+        execution_time=end_time - start_time,
         ascending_list=[False, True]
     )
 
