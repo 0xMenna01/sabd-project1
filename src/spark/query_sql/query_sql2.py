@@ -43,14 +43,14 @@ def exec_query(df: DataFrame) -> QueryResult:
     start_time = time.time()
     top_models_failures = models_failures.collect()
     end_time = time.time()
-    time_action1 = end_time - start_time
+    logger.log("Finished evaluating..")
 
     res1 = SparkActionResult(
         name="sql-query2-1",
         header=MODELS_HEADER,
         sort_list=MODELS_SORT_LIST,
         result=top_models_failures,
-        execution_time=time_action1,
+        execution_time=end_time - start_time,
         ascending_list=[False, True]
     )
 
@@ -58,14 +58,14 @@ def exec_query(df: DataFrame) -> QueryResult:
     start_time = time.time()
     top_vaults_failures = vaults_failures.collect()
     end_time = time.time()
-    time_action2 = end_time - start_time
+    logger.log("Finished evaluating..")
 
     res2 = SparkActionResult(
         name="sql-query2-2",
         header=VAULTS_HEADER,
         sort_list=VAULTS_SORT_LIST,
         result=top_vaults_failures,
-        execution_time=time_action2,
+        execution_time=end_time - start_time,
         ascending_list=[False, True]
     )
 
