@@ -1,5 +1,0 @@
-query,format,worker_nodes,execution_time
-query2,avro,1,0.4905104637145996
-sql-query2,avro,1,0.9964437484741211
-query1,avro,1,3.8386967182159424
-sql-query1-evaluation,avro,1,0.42943453788757324
