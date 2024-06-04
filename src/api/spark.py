@@ -130,6 +130,10 @@ class SparkAPI:
             header=True,
         )
 
+    def close(self) -> None:
+        self._session.stop()
+        SparkAPI._instance = None
+
 
 class SparkBuilder:
     """Builds the Spark API."""

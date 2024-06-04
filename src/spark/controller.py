@@ -1,6 +1,4 @@
 from __future__ import annotations
-import os
-import time
 
 from .model import QueryFramework, QueryNum, DataFormat, SparkError, QueryResult
 from api.spark import SparkAPI
@@ -87,6 +85,9 @@ class SparkController:
         api = SparkAPI.get()
         assert api.dataset_exists_on_hdfs(PRE_PROCESSED_FILE_NAME, self._data_format.name.lower(
         )), "Data not prepared for processing"
+
+        # Clear eventual previous results
+        self._results.clear()
 
         LoggerFactory.spark().log("Reading preprocessed data from HDFS..")
         (rdd, df) = api.read_preprocessed_data_and_persist(
@@ -185,6 +186,10 @@ class SparkController:
                     f"Reading result of {filename} from HDFS and exporting to Redis..")
                 df = spark.read_result_from_hdfs(filename)
                 redis.put_result(query=filename, df=df)
+
+    def close_session(self) -> None:
+        """Close the Spark session."""
+        SparkAPI.get().close()
 
 
 def query_spark_core(query_num: QueryNum, rdd: RDD) -> QueryResult:

@@ -42,7 +42,6 @@ def results_path_from_filename(filename: str) -> str:
     return os.path.join(QUERY_RESULTS_PATH, filename)
 
 
-
 def write_result_as_csv(res_df: DataFrame, out_path: str) -> None:
     header = res_df.schema.names
     res_list = res_df.rdd.collect()
@@ -59,7 +58,7 @@ def write_result_as_csv(res_df: DataFrame, out_path: str) -> None:
 
 
 def write_evaluation(query_name: str, format: str, exec_time: float) -> None:
-    
+
     worker_nodes = SparkAPI.get().context._jsc.sc(  # type: ignore
     ).getExecutorMemoryStatus().size() - 1  # type: ignore
     eval_path = results_path_from_filename("evaluation.csv")
@@ -67,8 +66,13 @@ def write_evaluation(query_name: str, format: str, exec_time: float) -> None:
     if (not os.path.exists(eval_path)):
         with open(eval_path, "+x") as out_file:
             writer = csv.writer(out_file)
-            writer.writerow(["query", "format", "worker_nodes", "execution_time"])
+            writer.writerow(
+                ["query", "format", "worker_nodes", "execution_time"])
 
     with open(eval_path, "a") as out_file:
         writer = csv.writer(out_file)
         writer.writerow([query_name, format, worker_nodes, exec_time])
+
+
+def delete_evaluation_file() -> None:
+    delete_file(EVAL_PATH)
