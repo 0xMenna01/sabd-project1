@@ -12,7 +12,7 @@ def exec_query(df: DataFrame) -> QueryResult:
 
     result_df = api.session.sql("""
         SELECT
-            failure,
+            CAST(failure as INT) AS failure,
             MIN(s9_power_on_hours) AS min_power_on_hours,
             percentile_approx(s9_power_on_hours, 0.25) AS percentile_25th,
             percentile_approx(s9_power_on_hours, 0.5) AS percentile_50th,
