@@ -1,6 +1,6 @@
 # Data Monitoring Analysis with Apache Spark
 
-![Python](https://img.shields.io/badge/Python-v3.12-blue.svg?logo=python&longCache=true&logoColor=white&colorB=5e81ac&style=flat-square&colorA=4c566a)
+![Python](https://img.shields.io/badge/Python-v3.11-blue.svg?logo=python&longCache=true&logoColor=white&colorB=5e81ac&style=flat-square&colorA=4c566a)
 ![GitHub Last Commit](https://img.shields.io/github/last-commit/google/skia.svg?style=flat-square&colorA=4c566a&colorB=a3be8c&logo=GitHub)
 
 The purpose of this project is to utilize the Apache Spark data processing framework to answer queries on telemetry data from approximately 200k hard disks in data centers managed by Backblaze. For the purposes of this project, a reduced version of the dataset indicated in the ACM DEBS 2024 Grand Challenge is provided.
