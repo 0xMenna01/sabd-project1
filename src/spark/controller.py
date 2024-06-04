@@ -7,7 +7,7 @@ from api.spark import SparkAPI
 from pyspark.rdd import RDD
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.functions import col
-from pyspark.sql.types import IntegerType, DoubleType, DateType, StringType
+from pyspark.sql.types import IntegerType, DoubleType, BooleanType, DateType, StringType
 # Spark core queries
 from .query import query1, query2, query3
 # Spark SQL queries
@@ -57,19 +57,15 @@ class SparkController:
             df.date.cast(DateType()),
             df.serial_number.cast(StringType()),
             df.model.cast(StringType()),
-            df.failure.cast(IntegerType()),
+            df.failure.cast(BooleanType()),
             df.vault_id.cast(IntegerType()),
             df.s9_power_on_hours.cast(DoubleType())
         )
         # Filter out invalid rows
         df = (
             df
-            .where(df.date.isNotNull())
             .where(col('serial_number').rlike('^[A-Z0-9]{8,}$'))
             .where(col('model').rlike('^[A-Z0-9]+$'))
-            .where(col('failure').isNotNull())
-            .where(col('vault_id').isNotNull())
-            .where(col('s9_power_on_hours').isNotNull())
         )
 
         df = df.withColumnRenamed("date", "event_date")

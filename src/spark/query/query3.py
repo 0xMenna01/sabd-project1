@@ -1,51 +1,62 @@
 import time
+from numpy import double
 from pyspark.rdd import RDD
 from pyspark.sql import Row, DataFrame, functions as F
 from utils.logging.factory import LoggerFactory
 from spark.model import SparkActionResult, QueryResult
 
 
-# Compute p percentile of an already sorted list
-def get_percentile(p: float, l: list) -> float:
-    k = p * (len(l) - 1)
-    # k is an integer
-    if k-int(k) == 0.0:
-        k = int(k)
-        return l[k]
-    # k is not integer
-    else:
-        k = int(k)
-        return (l[k]+l[k+1])/2
-
-
-# ********************************** AggregateByKey components: seqFunc: (U, V) => U, combFunc: (U, U) => U) ************************************
-# initial accumulator (one for each key)
-start_value = []
-# sequence operation: works on partitions, x is the accumulator (start_value) where we store the entire column values as a list, y is each tuple
-def seq_op(x, y): return (x+[y])
-# combine operation: merges the accumulators x and y from different partitions
-# in this case (default 2 partitions) x is the acc for the first partition, y for the second
-def comb_op(x, y): return (x+y)
-# **********************************************************************************************************************************************
+HEADER = ["failure", "min", "25th_percentile",
+          "50th_percentile", "75th_percentile", "max", "count"]
+SORT_LIST = ["failure"]
 
 
 def exec_query(rdd: RDD[tuple]) -> QueryResult:
     # @param rdd : RDD of ['event_date', 'serial_number', 'model', 'failure', 'vault_id', 's9_power_on_hours']
 
+    def percentile_approx(values: list, p: float) -> float | None:
+        """
+        Approximation of percentile,
+        assuming the input list is already sorted.
+
+        :param values: List of numerical values (sorted).
+        :param percent: (0-1).
+        :return: Approximated percentile value.
+        """
+
+        if not values:
+            return None
+
+        n = len(values)
+        product = p * n
+
+        if product.is_integer():
+            return (values[int(product) - 1] + values[int(product)]) / 2
+        else:
+            return values[int(product)]
+
     rdd_res = (
         rdd
-        # Divide in failed and not failed
-        .map(lambda x: ((x[3], x[1]), (x[0], x[5])))
-        # Reduce by taking only the records with the latest day
-        .reduceByKey(lambda x, y: x if (x[0] > y[0]) else y)
+        # Map to (serial_number, (failure, s9_power_on_hours))
+        .map(lambda x: (x[1], (x[3], x[5])))
+        # For each serial_number, get whether the disk has ever failed and the most recent s9_power_on_hours
+        .reduceByKey(lambda x, y: (x[0] or y[0], max(x[1], y[1])))
         # Map to (failure, s9_power_on_hours)
-        .map(lambda x: (x[0][0], x[1][1]))
-        # Sorts records based on S9 column
-        .sortBy(lambda x: x[1])
-        # Aggregate by key to 'transpose' s9 values
-        .aggregateByKey(start_value, seq_op, comb_op)
-        # Map to get stats from this list: min=list[0], max, 25 percentile, 50 percentile, 75 percentile, count
-        .map(lambda x: (x[0], x[1][0], x[1][len(x[1])-1], get_percentile(0.25, x[1]), get_percentile(0.5, x[1]), get_percentile(0.75, x[1]), len(x[1])))
+        .map(lambda x: (x[1][0], x[1][1]))
+        # Group by failure
+        .groupByKey()
+        # Sort the list of s9_power_on_hours
+        .mapValues(lambda x: sorted(x))
+        # Calculate statistics
+        .map(lambda x: (
+            int(x[0]),  # failure
+            x[1][0],  # min
+            percentile_approx(x[1], 0.25),  # 25th percentile
+            percentile_approx(x[1], 0.5),  # 50th percentile
+            percentile_approx(x[1], 0.75),  # 75th percentile
+            x[1][-1],  # max
+            len(x[1])  # count
+        ))
     )
 
     logger = LoggerFactory.spark()
@@ -58,10 +69,8 @@ def exec_query(rdd: RDD[tuple]) -> QueryResult:
 
     res = QueryResult(name="query3", results=[SparkActionResult(
         name="query3",
-        header=["failure", "min", "max", "25_percentile",
-                "50_percentile", "75_percentile", "count"],
-        sort_list=["failure", "min", "max", "25_percentile",
-                   "50_percentile", "75_percentile", "count"],
+        header=HEADER,
+        sort_list=SORT_LIST,
         result=out_res,
         execution_time=end_time - start_time
     )])

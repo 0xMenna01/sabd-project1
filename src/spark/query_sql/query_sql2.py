@@ -10,9 +10,9 @@ def exec_query(df: DataFrame) -> QueryResult:
     session = SparkAPI.get().session
     # Compute the number of failures for each (vault_id, model) pair
     partial_df = session.sql("""
-        SELECT vault_id, model, SUM(failure) AS failures_count
+        SELECT vault_id, model, COUNT(failure) AS failures_count
         FROM DisksMonitor
-        WHERE failure > 0
+        WHERE failure = 1
         GROUP BY vault_id, model
     """)
     partial_df.createOrReplaceTempView("VaultModelFailures")

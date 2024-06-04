@@ -15,10 +15,10 @@ def exec_query(rdd: RDD[tuple]) -> QueryResult:
     # Process the RDD
     res_rdd = (
         rdd
-        # Early filter to reduce data size
-        .filter(lambda x: x[3] > 0)
-        # Convert to ((event_date, vault_id), failure)
-        .map(lambda x: ((x[0], x[4]), x[3]))
+        # Filter on failure == True
+        .filter(lambda x: x[3] == True)
+        # Convert to ((event_date, vault_id), 1)
+        .map(lambda x: ((x[0], x[4]), int(1)))
         # Sum failures per (date, vault_id)
         .reduceByKey(lambda acc, failure: acc + failure)
         # Filter based on lookup failures

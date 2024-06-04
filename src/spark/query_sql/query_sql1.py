@@ -11,9 +11,9 @@ def exec_query(df: DataFrame) -> QueryResult:
 
     # SQL query
     result_df = SparkAPI.get().session.sql("""
-        SELECT event_date, vault_id, SUM(failure) AS  failures_count
+        SELECT event_date, vault_id, COUNT(failure) AS  failures_count
         FROM DisksMonitor
-        WHERE failure > 0
+        WHERE failure = 1
         GROUP BY event_date, vault_id
         HAVING failures_count IN (2, 3, 4)
     """)
