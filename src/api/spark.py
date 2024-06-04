@@ -1,6 +1,6 @@
 from __future__ import annotations
-import time
 
+import time
 from py4j.java_gateway import java_import
 from typing import Iterable, Optional, TypeVar
 from pyspark import RDD, SparkContext
@@ -9,8 +9,6 @@ from utils.logging.factory import LoggerFactory
 from utils.config.factory import ConfigFactory
 from pyspark.sql import DataFrame
 from spark.model import DataFormat, SparkActionResult
-
-T = TypeVar("T")
 
 
 class SparkAPI:
@@ -35,10 +33,16 @@ class SparkAPI:
     def session(self) -> SparkSession:
         return self._session
 
-    def file_exists_on_hdfs(self, filename: str, ext: str) -> bool:
+    def dataset_exists_on_hdfs(self, filename: str, ext: str) -> bool:
         dataset_url = ConfigFactory.config().hdfs_dataset_dir_url
         hdfs_path = self.context._jvm.Path(  # type: ignore
             dataset_url + "/" + filename + "." + ext)
+        return self._fs.exists(hdfs_path)
+
+    def result_exists_on_hdfs(self, filename: str) -> bool:
+        results_url = ConfigFactory.config().hdfs_results_dir_url
+        hdfs_path = self.context._jvm.Path(  # type: ignore
+            results_url + "/" + filename + ".csv")
         return self._fs.exists(hdfs_path)
 
     def wait_for_file_on_hdfs(self, filename: str, format: DataFormat) -> None:
@@ -46,7 +50,7 @@ class SparkAPI:
         logger = LoggerFactory.spark()
         logger.log("Checking if dataset exists on HDFS..")
         logged = False
-        while not self.file_exists_on_hdfs(filename, ext=format.name.lower()):
+        while not self.dataset_exists_on_hdfs(filename, ext=format.name.lower()):
             if not logged:
                 logger.log("Dataset not found on HDFS, waiting..")
                 logged = True
@@ -61,6 +65,10 @@ class SparkAPI:
     def read_avro_from_hdfs(self, filename: str) -> DataFrame:
         config = ConfigFactory.config()
         return self._session.read.format("avro").load(config.hdfs_dataset_dir_url + "/" + filename + ".avro", header=True)
+
+    def read_result_from_hdfs(self, filename: str) -> DataFrame:
+        config = ConfigFactory.config()
+        return self._session.read.csv(config.hdfs_results_dir_url + "/" + filename + ".csv", header=True)
 
     def read_from_hdfs(self, data_format: DataFormat, filename: str) -> DataFrame:
         """Reads the dataset from HDFS in the specified format."""

@@ -33,14 +33,21 @@ class NifiConfig(TypedDict):
     port: int
 
 
+class RedisConfig(TypedDict):
+    host: str
+    port: int
+    db: int
+
+
 class Config:
     """Configuration of the application."""
 
-    def __init__(self, hdfs: HdfsConfig, spark: SparkConfig, b2: B2Config, nifi: NifiConfig) -> None:
+    def __init__(self, hdfs: HdfsConfig, spark: SparkConfig, b2: B2Config, nifi: NifiConfig, redis: RedisConfig) -> None:
         self._hdfs = hdfs
         self._spark = spark
         self._b2 = b2
         self._nifi = nifi
+        self._redis = redis
 
     @staticmethod
     def from_default_config() -> Config:
@@ -48,7 +55,7 @@ class Config:
         with open(DEFAULT_CONFIG_PATH, 'r') as file:
             config_data = json.load(file)
 
-        return Config(hdfs=config_data['hdfs'], spark=config_data['spark'], b2=config_data['b2'], nifi=config_data['nifi'])
+        return Config(hdfs=config_data['hdfs'], spark=config_data['spark'], b2=config_data['b2'], nifi=config_data['nifi'], redis=config_data['redis'])
 
     @property
     def hdfs_host(self) -> str:
@@ -81,11 +88,11 @@ class Config:
     @property
     def nifi_endpoint(self) -> str:
         return "https://" + self._nifi['host'] + ":" + str(self._nifi['port'])
-    
+
     @property
     def hdfs_dataset_dir(self) -> str:
         return self._hdfs['datasetPath']
-    
+
     @property
     def hdfs_url(self) -> str:
         return "hdfs://" + self.hdfs_host + ":" + str(self.hdfs_port)
@@ -93,8 +100,19 @@ class Config:
     @property
     def hdfs_dataset_dir_url(self) -> str:
         return self.hdfs_url + self._hdfs['datasetPath']
-    
+
     @property
     def hdfs_results_dir_url(self) -> str:
         return self.hdfs_url + self._hdfs['resultsPath']
-    
+
+    @property
+    def redis_host(self) -> str:
+        return self._redis['host']
+
+    @property
+    def redis_port(self) -> int:
+        return self._redis['port']
+
+    @property
+    def redis_db(self) -> int:
+        return self._redis['db']

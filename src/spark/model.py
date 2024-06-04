@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from typing import List
 
@@ -21,6 +23,10 @@ class QueryNum(Enum):
     QUERY_TWO = 2
     QUERY_THREE = 3
     QUERY_ALL = 4
+
+    @staticmethod
+    def queries() -> list[QueryNum]:
+        return [QueryNum.QUERY_ONE, QueryNum.QUERY_TWO, QueryNum.QUERY_THREE]
 
 
 class SparkActionResult:

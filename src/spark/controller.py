@@ -15,6 +15,8 @@ from .query_sql import query_sql1, query_sql2, query_sql3
 from utils.config.factory import ConfigFactory
 from utils import files
 from utils.logging.factory import LoggerFactory
+from api.redis import RedisAPI
+
 
 DATASET_FILE_NAME = "dataset"
 PRE_PROCESSED_FILE_NAME = "preprocessed"
@@ -83,7 +85,7 @@ class SparkController:
 
         # Ensure data is prepared for processing
         api = SparkAPI.get()
-        assert api.file_exists_on_hdfs(PRE_PROCESSED_FILE_NAME, self._data_format.name.lower(
+        assert api.dataset_exists_on_hdfs(PRE_PROCESSED_FILE_NAME, self._data_format.name.lower(
         )), "Data not prepared for processing"
 
         LoggerFactory.spark().log("Reading preprocessed data from HDFS..")
@@ -94,7 +96,7 @@ class SparkController:
         if self._framework == QueryFramework.SPARK_CORE:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark Core
-                for query in QueryNum:
+                for query in QueryNum.queries():
                     res = query_spark_core(query, rdd)
                     self._results.append(res)
 
@@ -107,7 +109,7 @@ class SparkController:
         elif self._framework == QueryFramework.SPARK_SQL:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark SQL
-                for query in QueryNum:
+                for query in QueryNum.queries():
                     res = query_spark_sql(
                         query, df)
                     self._results.append(res)
@@ -122,7 +124,7 @@ class SparkController:
         elif self._framework == QueryFramework.SPARK_CORE_AND_SQL:
             if self._query_num == QueryNum.QUERY_ALL:
                 # Execute all queries with Spark Core and Spark SQL
-                for query in QueryNum:
+                for query in QueryNum.queries():
                     res = query_spark_core(query, rdd)
                     self._results.append(res)
                     res = query_spark_sql(
@@ -139,7 +141,7 @@ class SparkController:
 
         return self
 
-    def write_results(self) -> None:
+    def write_results(self) -> SparkController:
         """Write the results."""
         assert self._data_format is not None, "Data format not set"
         assert self._results, "No results to write"
@@ -165,6 +167,24 @@ class SparkController:
                 LoggerFactory.spark().log("Writing evaluation..")
                 files.write_evaluation(
                     res.name, self._data_format.name.lower(), res.total_exec_time)
+
+        return self
+
+    def export_results(self) -> None:
+        """Exports the results from hdfs to redis."""
+        assert self._results, "No results"
+        spark = SparkAPI.get()
+        redis = RedisAPI.get()
+
+        for res in self._results:
+            for output_res in res:
+                filename = output_res.name
+                assert spark.result_exists_on_hdfs(
+                    filename), "Result does not exist on HDFS"
+                LoggerFactory.spark().log(
+                    f"Reading result of {filename} from HDFS and exporting to Redis..")
+                df = spark.read_result_from_hdfs(filename)
+                redis.put_result(query=filename, df=df)
 
 
 def query_spark_core(query_num: QueryNum, rdd: RDD) -> QueryResult:

@@ -13,6 +13,6 @@ class ConfigFactory:
             ConfigFactory._config_instance = Config.from_default_config()
             # Log the configuration
             LoggerFactory.app().config_loaded(
-                ConfigFactory._config_instance._hdfs, ConfigFactory._config_instance._spark, ConfigFactory._config_instance._b2, ConfigFactory._config_instance._nifi)
-            
+                ConfigFactory._config_instance._hdfs, ConfigFactory._config_instance._spark, ConfigFactory._config_instance._b2, ConfigFactory._config_instance._nifi, ConfigFactory._config_instance._redis)
+
         return ConfigFactory._config_instance

@@ -18,9 +18,9 @@ class AppLogger(Logger):
         # Add the missing argument "logger_name"
         super().__init__(logger_name="AppLogger\n")
 
-    def config_loaded(self, hdfs_config, spark_config, b2_config, nifi_config):
+    def config_loaded(self, hdfs_config, spark_config, b2_config, nifi_config, redis_config):
         self.log(
-            f"{json.dumps(hdfs_config)}, {json.dumps(spark_config)}, {json.dumps(b2_config)}, {json.dumps(nifi_config)} loaded successfully..")
+            f"{json.dumps(hdfs_config)}, {json.dumps(spark_config)}, {json.dumps(b2_config)}, {json.dumps(nifi_config)}, {json.dumps(redis_config)} loaded successfully..")
 
 
 class SparkLogger(Logger):

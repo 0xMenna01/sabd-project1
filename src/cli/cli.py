@@ -4,6 +4,7 @@ from spark.model import QueryFramework, QueryNum, DataFormat
 from spark.controller import SparkController
 from ingestion import nifi_ingestion
 from api.spark import SparkAPI
+from utils.logging.factory import LoggerFactory
 
 
 class Cli:
@@ -54,13 +55,17 @@ class Cli:
             # Only process data (because preprocessed data is already on HDFS) and store results on HDFS
             init_sc \
                 .process_data() \
-                .write_results()
+                .write_results() \
+                .export_results()
         else:
             # Do everything at once
             init_sc \
                 .prepare_for_processing() \
                 .process_data() \
-                .write_results()
+                .write_results() \
+                .export_results()
+
+        LoggerFactory.app().log("Exiting spark-app CLI..")
 
 
 def get_framework(args) -> QueryFramework:
