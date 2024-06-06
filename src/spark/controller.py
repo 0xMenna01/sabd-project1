@@ -65,7 +65,7 @@ class SparkController:
         df = (
             df
             .where(col('serial_number').rlike('^[A-Z0-9]{8,}$'))
-            .where(col('model').rlike('^[A-Z0-9]+$'))
+            .where(col('model').rlike('^[A-Z0-9 ]+$'))
         )
 
         df = df.withColumnRenamed("date", "event_date")
