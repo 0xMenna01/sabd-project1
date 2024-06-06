@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    networks:
+      - project1-network
     volumes:
       - grafana-data:/var/lib/grafana
   
