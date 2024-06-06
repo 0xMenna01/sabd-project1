@@ -64,8 +64,8 @@ class SparkController:
         # Filter out invalid rows
         df = (
             df
-            .where(col('serial_number').rlike('^[A-Z0-9]{8,}$'))
-            .where(col('model').rlike('^[A-Z0-9 ]+$'))
+            .where(col('serial_number').rlike(r'^[a-zA-Z0-9_-]+$'))
+            .where(col('model').rlike(r'^[a-zA-Z0-9\s\(\)\[\]\-._]+$'))
         )
 
         df = df.withColumnRenamed("date", "event_date")
