@@ -1,6 +1,6 @@
 {
     "acquisition": "local",
-    "datasetPath": "/opt/nifi/nifi-current/dataset/raw_data_medium-utv_sorted.bin",
+    "datasetPath": "/opt/nifi/nifi-current/dataset/raw_data_medium-utv_sorted.csv",
     "b2": {
         "authKey": "",
         "bucketName": "",

@@ -1,0 +1,9 @@
+{
+    "acquisition": "remote",
+    "datasetPath": "",
+    "b2": {
+        "authKey": "MDAyMjcyNjI4ZDY4YzIyMDAwMDAwMDAwODpLMDAyVHpYUnhvR0cwcGJaQk9DanBYOHQrSDdMcHFF",
+        "bucketName": "dataset-project1",
+        "filename": "raw_data_medium-utv_sorted.bin"
+    }
+}

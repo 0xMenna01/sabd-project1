@@ -9,41 +9,61 @@ HDFS_MASTER_CONTAINER=hdfs-master
 NIFI_CONTAINER=nifi
 DOCKER_NETWORK=project1-network
 
+DATASET_RELATIVE_PATH=./nifi/nifi-ingestion/dataset
 
 usage() {
     echo "Usage (only one flag):"
-    echo "       ./manage-architecture.sh --start: 
-                   Starts the whole architecture"
-    echo "       ./manage-architecture.sh start --spark-worker <number_of_workers>:
-                   Starts the whole architecture with the specified number of spark workers"
+    echo "       ./manage-architecture.sh --start [--dataset <dataset_path>]:
+                   Starts the whole architecture. 
+                   If the dataset path is provided, the acquisition will be local, otherwise it will be fetched from a remote backblaze bucket (only one download per day)"
     echo "       ./manage-architecture.sh --restart-dfs: 
                    Restarts the HDFS"
     echo "       ./manage-architecture.sh --hdfs-scale-out -p <port1:port2>:
                    Scales out the HDFS with a new datanode"
     echo "       ./manage-architecture.sh --scale-spark-worker <number_of_workers>:
-                   Scalesthe Spark workers with the specified number of workers"
+                   Scales the Spark workers with the specified number of workers"
     echo "       ./manage-architecture.sh --nifi-remote: 
                    Sets Nifi to acquire the dataset remotely"
     echo "       ./manage-architecture.sh --nifi-local:
                      Sets Nifi to acquire the dataset locally"
 }
 
-
+copy_dataset() {
+    local dataset_path=$1
+    
+   # Check if the input path exists and is a file
+    if [ ! -f "$dataset_path" ]; then
+        echo "Input path does not exist or is not a file."
+        exit 1
+    fi
+    
+    # Create the destination directory if it doesn't exist
+    mkdir -p "$DATASET_RELATIVE_PATH"
+    
+    # Copy the dataset file to the destination directory
+    cp -r $dataset_path $DATASET_RELATIVE_PATH/raw_data_medium-utv_sorted.csv
+    
+    echo "Dataset has been copied to docker volume $DATASET_RELATIVE_PATH, successfully."
+}
 
 run_docker_compose() {
+    echo "Starting the architecture with $1 Spark workers..."
     docker-compose up --detach --scale spark-worker=$1
 }
 
 init_hdfs() {
+    echo "Initializing HDFS..."
     docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh --format
     docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/init-dataset-directory.sh
 }
 
 restart_dfs() {
+    echo "Restarting HDFS..."
     docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh
 }
 
 hdfs_scale_out() {
+    echo "Scaling out HDFS datanodes..."
     # Get the last number of the last name node
     last_node=$(docker-compose exec $HDFS_MASTER_CONTAINER sh -c "tail -n 1 $HADOOP_HOME/etc/hadoop/workers | grep -o '[0-9]\+'")
     new_node=$((last_node + 1))
@@ -59,23 +79,26 @@ hdfs_scale_out() {
     restart_dfs
 }
 
-config-nifi() {
+config_nifi() {
+    echo "Configuring Nifi..."
     docker-compose exec $NIFI_CONTAINER $PATH_NIFI_SCRIPTS/set-config.sh $1
 }
-
 
 execute() {
     if [ "$1" = "--help" ]; then
         usage
         exit 0
     elif [ "$1" = "--start" ]; then
-        run_docker_compose 1
-        init_hdfs
-        config-nifi --local
-    elif [ "$1" = "--spark-worker" ]; then
-        run_docker_compose $2
-        init_hdfs
-        config-nifi --local
+        if [ "$2" = "--dataset" ] && [ -n "$3" ]; then
+            copy_dataset $3
+            run_docker_compose 1
+            init_hdfs
+            config_nifi --local
+        else
+            run_docker_compose 1
+            init_hdfs
+            config_nifi --remote
+        fi
     elif [ "$1" = "--restart-dfs" ]; then
         restart_dfs
     elif [ "$1" = "--hdfs-scale-out" ]; then
@@ -83,9 +106,9 @@ execute() {
     elif [ "$1" = "--scale-spark-worker" ]; then
         run_docker_compose $2
     elif [ "$1" = "--nifi-remote" ]; then
-        config-nifi --remote
+        config_nifi --remote
     elif [ "$1" = "--nifi-local" ]; then
-        config-nifi --local
+        config_nifi --local
     else
         usage
     fi

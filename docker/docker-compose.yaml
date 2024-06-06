@@ -17,7 +17,7 @@ services:
       - NIFI_HOME=/opt/nifi/nifi-current
     volumes:
       - ./scripts/nifi:/opt/nifi/nifi-current/conf/nifi-ingestion/scripts
-      - ./nifi/nifi-ingestion/enc-dataset:/opt/nifi/nifi-current/dataset
+      - ./nifi/nifi-ingestion/dataset:/opt/nifi/nifi-current/dataset
     depends_on: 
       - hdfs-master
   
