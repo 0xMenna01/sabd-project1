@@ -1,6 +1,16 @@
 version: '3'
 
 services:
+
+  grafana:
+    container_name: grafana
+    build: ./grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+  
   nifi:
     container_name: nifi-ingestion
     build: ./nifi/nifi-ingestion/
@@ -76,6 +86,9 @@ services:
     ports:
       - "6379:6379"
     tty: true
+
+volumes:
+  grafana-data:
 
 networks:
   project1-network:
