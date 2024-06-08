@@ -20,9 +20,9 @@ The dataset contains S.M.A.R.T monitoring data, extended with some attributes ca
 
 
 ## Usage
+(When running the system for the first time)
 
-1. When running the system for the first time:
-   Inside ./docker/ run the following command:
+1. Inside ./docker/ run the following command:
    - ./scripts/manage-architecture.sh --start [--dataset <dataset_path>] ['--help']
 3. When the environment is setup, start the spark application with the following command:
    - ./scripts/start-spark-app.sh 
