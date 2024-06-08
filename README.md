@@ -39,11 +39,11 @@ To start the overall architecture, you need to run the script located at `docker
    ./scripts/manage-architecture.sh --start --dataset <dataset_path>
    ```
 
-3.Alternatively, to start the architecture with a remote dataset acquisition configuration, run:
+3. Alternatively, to start the architecture with a remote dataset acquisition configuration, run:
 
-```bash
-./scripts/manage-architecture.sh --start
-```
+    ```bash
+    ./scripts/manage-architecture.sh --start
+    ```
 
 **Note:** The remote configuration allows only one download per day, so only one ingestion can be performed daily with this setup.
 
