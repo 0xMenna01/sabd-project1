@@ -3,6 +3,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from loguru import logger
+import os
 
 # Define the input and output file names
 EVAL_PATH = 'Results/evaluation.csv'
@@ -15,6 +16,9 @@ WORKER_NODES = [1, 2, 3, 4]
 
 
 def avg_evaluation_plots():
+    if not os.path.exists(PLOTS_PATH):
+        os.makedirs(PLOTS_PATH)
+        
     df = pd.read_csv(EVAL_PATH)
     # Group by query and format, then calculate the mean execution time
     avg_exec_times = df.groupby(['query', 'format', 'worker_nodes'])[
