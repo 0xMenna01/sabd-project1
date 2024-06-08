@@ -23,10 +23,10 @@ The dataset contains S.M.A.R.T monitoring data, extended with some attributes ca
 
 1. When running the system for the first time:
    Inside ./docker/ run the following command:
-       - ./scripts/manage-architecture.sh --start [--dataset <dataset_path>] ['--help']
-2. When the environment is setup, start the spark application with the following command:
-       - ./scripts/start-spark-app.sh 
-3. Once in the spark container run:
-       - python src/main.py [-h] [--nifi-ingestion] [--local-write] [--write-evaluation] [--process | --pre-process] {spark-core,spark-sql,spark-all} {1,2,3,all} {parquet,avro}
+   - ./scripts/manage-architecture.sh --start [--dataset <dataset_path>] ['--help']
+3. When the environment is setup, start the spark application with the following command:
+   - ./scripts/start-spark-app.sh 
+5. Once in the spark container run:
+   - python src/main.py [-h] [--nifi-ingestion] [--local-write] [--write-evaluation] [--process | --pre-process] {spark-core,spark-sql,spark-all} {1,2,3,all} {parquet,avro}
 
 
