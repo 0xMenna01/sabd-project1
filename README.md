@@ -41,9 +41,9 @@ To start the overall architecture, you need to run the script located at `docker
 
 3. Alternatively, to start the architecture with a remote dataset acquisition configuration, run:
 
-    ```bash
-    ./scripts/manage-architecture.sh --start
-    ```
+   ```bash
+   ./scripts/manage-architecture.sh --start
+   ```
 
 **Note:** The remote configuration allows only one download per day, so only one ingestion can be performed daily with this setup.
 
@@ -88,10 +88,6 @@ python src/main.py --help
 ```
 
 **Note:** You must execute the script from the Spark user's home directory.
-
-## Halting the System
-
-To halt the system, follow these steps:
 
 ### Stopping the Architecture
 
