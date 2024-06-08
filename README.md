@@ -20,3 +20,91 @@ Calculate the top 10 models of hard disks that have experienced the highest numb
 ### Q3
 
 Compute the minimum, 25th, 50th, 75th percentile, and maximum of the operating hours (s9 power on hours field) of hard disks that have experienced failures and hard disks that have not experienced failures. Pay attention, the s9 power on hours field reports a cumulative value, therefore the statistics required by the query should refer to the last useful detection day for each specific hard disk (consider the use of the serial number field). Also, indicate the total number of events used for calculating the statistics in the output.
+
+## Usage
+
+### Starting the Overall Architecture
+
+To start the overall architecture, you need to run the script located at `docker/scripts/manage-architecture.sh`. Follow these steps:
+
+1. Move to the `docker` directory:
+
+   ```bash
+   cd docker
+   ```
+
+2. To initialize the architecture with a local dataset acquisition configuration for NiFi, run the script with the dataset path parameter:
+
+   ```bash
+   ./scripts/manage-architecture.sh --start --dataset <dataset_path>
+   ```
+
+3.Alternatively, to start the architecture with a remote dataset acquisition configuration, run:
+
+```bash
+./scripts/manage-architecture.sh --start
+```
+
+**Note:** The remote configuration allows only one download per day, so only one ingestion can be performed daily with this setup.
+
+For further details of the script, such as scaling parameters and changing the dataset acquisition configuration for nifi (to be performed only after the architecture has been started with one of the commands above), execute:
+
+```bash
+./scripts/manage-architecture --help
+```
+
+### Running the Spark Client
+
+Once the architecture has started, to run queries using the Spark client, follow these steps:
+
+1. Ensure you are in the `docker` folder:
+
+   ```bash
+   cd docker
+   ```
+
+2. Start the Spark client container by running:
+
+   ```bash
+   ./scripts/start-spark-app.sh
+   ```
+
+   This command will provide you with a shell into the client container.
+
+3. To run the Spark client and execute queries, use the src/main.py program along with the necessary parameters. For instance, if it's your first time running the client and you wish to execute all queries, you can use the following command:
+
+   ```bash
+   python src/main.py spark-all all parquet --nifi-ingestion
+   ```
+
+   This command will execute queries with both Spark Core and Spark SQL (`spark-all`), executing all queries (`all`) using the Parquet format, and scheduling dataset ingestion through NiFi. It will also perform both preprocessing and processing tasks.
+
+   - To only perform preprocessing or processing tasks, use the `--pre-process` or `--process` flags respectively.
+
+For the full usage details of the script, run:
+
+```bash
+python src/main.py --help
+```
+
+**Note:** You must execute the script from the Spark user's home directory.
+
+## Halting the System
+
+To halt the system, follow these steps:
+
+### Stopping the Architecture
+
+To stop the architecture, navigate to the `docker` folder and run the provided script:
+
+```sh
+./scripts/stop-architecture.sh
+```
+
+### Stopping the Spark Client
+
+To stop the Spark client, execute the following command from the docker folder:
+
+```sh
+./scripts/kill-spark-app.sh
+```

@@ -12,7 +12,7 @@ DOCKER_NETWORK=project1-network
 DATASET_RELATIVE_PATH=./nifi/nifi-ingestion/dataset
 
 usage() {
-    echo "Usage (only one flag):"
+    echo "Usage:"
     echo "       ./manage-architecture.sh --start [--dataset <dataset_path>]:
                    Starts the whole architecture. 
                    If the dataset path is provided, the acquisition will be local, otherwise it will be fetched from a remote backblaze bucket (only one download per day)"
@@ -48,29 +48,29 @@ copy_dataset() {
 
 run_docker_compose() {
     echo "Starting the architecture with $1 Spark workers..."
-    docker-compose up --detach --scale spark-worker=$1
+    docker compose up --detach --scale spark-worker=$1
 }
 
 init_hdfs() {
     echo "Initializing HDFS..."
-    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh --format
-    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/init-dataset-directory.sh
+    docker compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh --format
+    docker compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/init-dataset-directory.sh
 }
 
 restart_dfs() {
     echo "Restarting HDFS..."
-    docker-compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh
+    docker compose exec $HDFS_MASTER_CONTAINER $PATH_HDFS_SCRIPTS/start-dfs.sh
 }
 
 hdfs_scale_out() {
     echo "Scaling out HDFS datanodes..."
     # Get the last number of the last name node
-    last_node=$(docker-compose exec $HDFS_MASTER_CONTAINER sh -c "tail -n 1 $HADOOP_HOME/etc/hadoop/workers | grep -o '[0-9]\+'")
+    last_node=$(docker compose exec $HDFS_MASTER_CONTAINER sh -c "tail -n 1 $HADOOP_HOME/etc/hadoop/workers | grep -o '[0-9]\+'")
     new_node=$((last_node + 1))
     
     # Add the new name node
     new_node_name="slave$new_node"
-    docker-compose exec $HDFS_MASTER_CONTAINER sh -c "echo $new_node_name >> $HADOOP_HOME/etc/hadoop/workers"
+    docker compose exec $HDFS_MASTER_CONTAINER sh -c "echo $new_node_name >> $HADOOP_HOME/etc/hadoop/workers"
     
     # Run the new datandode container
     docker run -t -i -p $1 -d --network=$DOCKER_NETWORK --name=$new_node_name $HDFS_DOCKER_IMAGE
@@ -81,7 +81,7 @@ hdfs_scale_out() {
 
 config_nifi() {
     echo "Configuring Nifi..."
-    docker-compose exec $NIFI_CONTAINER $PATH_NIFI_SCRIPTS/set-config.sh $1
+    docker compose exec $NIFI_CONTAINER $PATH_NIFI_SCRIPTS/set-config.sh $1
 }
 
 execute() {
