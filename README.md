@@ -10,14 +10,16 @@ The dataset contains S.M.A.R.T monitoring data, extended with some attributes ca
 ## Project Queries
 
 #### Q1
+
 - For each day, for each vault (refer to the vault id field), calculate the total number of failures. Determine the list of vaults that have experienced exactly 4, 3, and 2 failures.
 
 #### Q2
+
 - Calculate the top 10 models of hard disks that have experienced the highest number of failures. The ranking should include the hard disk model and the total number of failures suffered by hard disks of that specific model. Then, compute a second ranking of the top 10 vaults that have recorded the highest number of failures. For each vault, report the number of failures and the list (without repetitions) of hard disk models subject to at least one failure.
 
 #### Q3
-- Compute the minimum, 25th, 50th, 75th percentile, and maximum of the operating hours (s9 power on hours field) of hard disks that have experienced failures and hard disks that have not experienced failures. Pay attention, the s9 power on hours field reports a cumulative value, therefore the statistics required by the query should refer to the last useful detection day for each specific hard disk (consider the use of the serial number field). Also, indicate the total number of events used for calculating the statistics in the output.
 
+- Compute the minimum, 25th, 50th, 75th percentile, and maximum of the operating hours (s9 power on hours field) of hard disks that have experienced failures and hard disks that have not experienced failures. Pay attention, the s9 power on hours field reports a cumulative value, therefore the statistics required by the query should refer to the last useful detection day for each specific hard disk (consider the use of the serial number field). Also, indicate the total number of events used for calculating the statistics in the output.
 
 ## Usage
 
@@ -48,7 +50,7 @@ To start the overall architecture, you need to run the script located at `docker
 For further details of the script, such as scaling parameters and changing the dataset acquisition configuration for nifi (to be performed only after the architecture has been started with one of the commands above), execute:
 
 ```bash
-./scripts/manage-architecture --help
+./scripts/manage-architecture.sh --help
 ```
 
 ### Running the Spark Client
@@ -75,7 +77,7 @@ Once the architecture has started, to run queries using the Spark client, follow
    python src/main.py spark-all all parquet --nifi-ingestion
    ```
 
-   This command will execute queries with both Spark Core and Spark SQL (`spark-all`), executing all queries (`all`) using the Parquet format, and scheduling dataset ingestion through NiFi. It will also perform both preprocessing and processing tasks.
+   This command will execute queries with both Spark Core and Spark SQL (`spark-all`), executing all queries (`all`) using the Parquet format (`parquet`), and scheduling dataset ingestion through NiFi (`--nifi-ingestion`). It will also perform both preprocessing and processing tasks.
 
    - To only perform preprocessing or processing tasks, use the `--pre-process` or `--process` flags respectively.
 
@@ -86,14 +88,7 @@ python src/main.py --help
 ```
 
 **Note:** You must execute the script from the Spark user's home directory.
-
-### Stopping the Architecture
-
-To stop the architecture, navigate to the `docker` folder and run the provided script:
-
-```sh
-./scripts/stop-architecture.sh
-```
+**Note:** If you intend to write the evaluation results locally (with the flag --write-evaluation), we recommend deleting the evaluation.csv file in the Results directory beforehand, as the program will append the computed evaluation to that file rather than overwriting it.
 
 ### Stopping the Spark Client
 
@@ -101,4 +96,12 @@ To stop the Spark client, execute the following command from the docker folder:
 
 ```sh
 ./scripts/kill-spark-app.sh
+```
+
+### Stopping the Architecture
+
+To stop the architecture, navigate to the `docker` folder and run the provided script:
+
+```sh
+./scripts/stop-architecture.sh
 ```

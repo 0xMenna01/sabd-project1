@@ -40,6 +40,7 @@ copy_dataset() {
     # Create the destination directory if it doesn't exist
     mkdir -p "$DATASET_RELATIVE_PATH"
     
+    echo "Copying the dataset to the desired directory, required for the Docker volume..."
     # Copy the dataset file to the destination directory
     cp -r $dataset_path $DATASET_RELATIVE_PATH/raw_data_medium-utv_sorted.csv
     

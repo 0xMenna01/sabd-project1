@@ -41,7 +41,7 @@ def exec_query(rdd: RDD[tuple]) -> QueryResult:
     # Compute the top 10 vaults with the most failures and for each vault, report the associated list of models
     vaults_failures = (
         partial_rdd
-        # Convert to (vault_id, (failures_coount, [model]))
+        # Convert to (vault_id, (failures_count, [model]))
         .map(lambda x: (x[0][0], (x[1], [x[0][1]])))
         # Sum failures for each vault and compute the list of models (without duplicates)
         .reduceByKey(lambda a, b: (a[0] + b[0], list(set(a[1] + b[1]))))

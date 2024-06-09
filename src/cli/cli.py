@@ -20,16 +20,16 @@ class Cli:
         self.parser.add_argument(
             "--nifi-ingestion", action="store_true", help="Whether to ingest data using NiFi")
         self.parser.add_argument(
-            "--local-write", action="store_true", help="Whether to write locally")
+            "--local-write", action="store_true", help="Whether to write results locally")
         self.parser.add_argument(
-            "--write-evaluation", action="store_true", help="Whether to write for evaluation")
+            "--write-evaluation", action="store_true", help="Whether to write query evaluation locally")
 
         # Mutually exclusive group for only_process and only_pre_process
         group = self.parser.add_mutually_exclusive_group()
         group.add_argument(
             "--process", action="store_true", help="To only perform the data processing because preprocessed data is already available")
         group.add_argument(
-            "--pre-process", action="store_true", help="To only perform the data preprocessing and storing it in HDFS")
+            "--pre-process", action="store_true", help="To only perform the data preprocessing and store it in HDFS")
 
     def start(self):
         args = self.parser.parse_args()
