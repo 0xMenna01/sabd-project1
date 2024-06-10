@@ -23,6 +23,8 @@ class Cli:
             "--local-write", action="store_true", help="Whether to write results locally")
         self.parser.add_argument(
             "--write-evaluation", action="store_true", help="Whether to write query evaluation locally")
+        self.parser.add_argument(
+            "--redis-export", action="store_true", help="Whether to export results from HDFS to Redis")
 
         # Mutually exclusive group for only_process and only_pre_process
         group = self.parser.add_mutually_exclusive_group()
@@ -47,23 +49,24 @@ class Cli:
         sc = SparkController(
             framework, query, local_write=args.local_write, write_evaluation=args.write_evaluation)
 
-        init_sc = sc.set_data_format(format)
+        sc.set_data_format(format)
         if args.pre_process:
             # Only pre-process data and store prepared data on HDFS
-            init_sc.prepare_for_processing()
+            sc.prepare_for_processing()
         elif args.process:
             # Only process data (because preprocessed data is already on HDFS) and store results on HDFS
-            init_sc \
+            sc \
                 .process_data() \
-                .write_results() \
-                .export_results()
+                .write_results()
         else:
             # Do everything at once
-            init_sc \
+            sc \
                 .prepare_for_processing() \
                 .process_data() \
-                .write_results() \
-                .export_results()
+                .write_results()
+        if args.redis_export:
+            # Export results from HDFS to Redis
+            sc.export_results()
 
         LoggerFactory.app().log("Exiting spark-app CLI..")
 

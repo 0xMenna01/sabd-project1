@@ -74,10 +74,10 @@ Once the architecture has started, to run queries using the Spark client, follow
 3. To run the Spark client and execute queries, use the src/main.py program along with the necessary parameters. For instance, if it's your first time running the client and you wish to execute all queries, you can use the following command:
 
    ```bash
-   python src/main.py spark-all all parquet --nifi-ingestion
+   python src/main.py spark-all all parquet --nifi-ingestion --redis-export
    ```
 
-   This command will execute queries with both Spark Core and Spark SQL (`spark-all`), executing all queries (`all`) using the Parquet format (`parquet`), and scheduling dataset ingestion through NiFi (`--nifi-ingestion`). It will also perform both preprocessing and processing tasks.
+   This command will execute queries with both Spark Core and Spark SQL (`spark-all`), executing all queries (`all`) using the Parquet format (`parquet`), scheduling dataset ingestion through NiFi (`--nifi-ingestion`), and exporting results from HDFS to redi (`--redis-export`). It will also perform both preprocessing and processing tasks.
 
    - To only perform preprocessing or processing tasks, use the `--pre-process` or `--process` flags respectively.
 

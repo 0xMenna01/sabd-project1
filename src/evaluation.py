@@ -22,7 +22,7 @@ def query_evaluation():
         sc = SparkController(
             QueryFramework.SPARK_CORE_AND_SQL, QueryNum.QUERY_ALL, write_evaluation=True)
         sc.set_data_format(format).prepare_for_processing()
-        for i in range(RUNS):
+        for _ in range(RUNS):
             sc.process_data().write_results()
             sc.close_session()
 
